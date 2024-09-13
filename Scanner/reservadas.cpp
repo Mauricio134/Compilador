@@ -7,6 +7,36 @@ using namespace std;
 
 set<string> reservadas = {"array" , "boolean" , "char" , "else" , "false" , "for" , "function" , "if" , "integer" , "print" , "return" , "string" , "true" , "void" , "while"};
 
+set<string> elements = {
+    ":", 
+    "=", 
+    ";",
+    "[",
+    "]",
+    "(",
+    ")",
+    "+",
+    "-",
+    "!",
+    "^",
+    "*",
+    "/",
+    "%",
+    "<",
+    ">",
+    "++",
+    "--",
+    ">=",
+    "<=",
+    "==",
+    "!=",
+    "&&",
+    "||",
+    "//",
+    "/*",
+    "*/"
+};
+
 map<string, string> token = {
     {"array", "ARRAY"},
     {"boolean", "BOOLEAN"},
@@ -54,5 +84,10 @@ map<string, string> token = {
 
 bool reservedWord(string word){
     if(reservadas.count(word) == true) return true;
+    return false;
+}
+
+bool elementos(string word){
+    if(elements.count(word) == true) return true;
     return false;
 }

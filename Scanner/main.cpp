@@ -9,7 +9,8 @@ const char * peekChar(const char * word, int camino){
     string palabra = "";
     palabra += word;
     word++;
-    if(*word == '\0') return word;  
+    if(*word == '\0') return word;
+    
     if(camino == 0){
         while(*word != ' '){
             palabra += *word;
