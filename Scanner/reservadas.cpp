@@ -2,40 +2,37 @@
 #include <iostream>
 #include <set>
 #include <map>
+#include <vector>
 
 using namespace std;
 
-set<string> reservadas = {"array" , "boolean" , "char" , "else" , "false" , "for" , "function" , "if" , "integer" , "print" , "return" , "string" , "true" , "void" , "while"};
+int columna = 0;
+int fila = 0;
+string word;
+const char * getcharcurrent = nullptr;
+const char * peekcharcurrent = nullptr;
 
-set<string> elements = {
-    ":", 
-    "=", 
-    ";",
-    "[",
-    "]",
-    "(",
-    ")",
-    "+",
-    "-",
-    "!",
-    "^",
-    "*",
-    "/",
-    "%",
-    "<",
-    ">",
-    "++",
-    "--",
-    ">=",
-    "<=",
-    "==",
-    "!=",
-    "&&",
-    "||",
-    "//",
-    "/*",
-    "*/"
+enum TokenType {
+    TOKEN_ID, TOKEN_DECLAR, TOKEN_ASIG, TOKEN_DELIM_SC, TOKEN_DELIM_B_O,
+    TOKEN_DELIM_B_C, TOKEN_DELIM_P_O, TOKEN_DELIM_P_C, TOKEN_OPER_SUM,
+    TOKEN_OPER_REST, TOKEN_OPER_EX, TOKEN_OPER_EXP, TOKEN_OPER_MUL,
+    TOKEN_OPER_DIV, TOKEN_OPER_MOD, TOKEN_OPER_MENOR, TOKEN_OPER_MAYOR,
+    TOKEN_OPER_S_SUMA, TOKEN_OPER_S_RESTA, TOKEN_OPER_MAY_E, TOKEN_OPER_MEN_E,
+    TOKEN_OPER_COMP_E, TOKEN_OPER_COMP_D, TOKEN_OPER_AND, TOKEN_OPER_OR,
+    TOKEN_COMEN, TOKEN_COMEN_OPEN, TOKEN_COMEN_CLOSE, TOKEN_UNKNOWN, TOKEN_EOF,TOKEN_INTEGER
 };
+
+class Token{
+public:
+    TokenType token;
+    string value;
+    int fila;
+    int columna;
+};
+
+vector<Token> tokens;
+
+set<string> reservadas = {"array" , "boolean" , "char" , "else" , "false" , "for" , "function" , "if" , "integer" , "print" , "return" , "string" , "true" , "void" , "while"};
 
 map<string, string> token = {
     {"array", "ARRAY"},
@@ -84,10 +81,5 @@ map<string, string> token = {
 
 bool reservedWord(string word){
     if(reservadas.count(word) == true) return true;
-    return false;
-}
-
-bool elementos(string word){
-    if(elements.count(word) == true) return true;
     return false;
 }

@@ -5,93 +5,77 @@
 
 using namespace std;
 
-const char * peekChar(const char * word, int camino){
-    string palabra = "";
-    palabra += word;
-    word++;
-    if(*word == '\0') return word;
-    
-    if(camino == 0){
-        while(*word != ' '){
-            palabra += *word;
-            word++;
-            if(*word == '+') break;
-            else if(*word == '-') break;
-        }
-        if(reservedWord(palabra)) cout << "palabra reservada" << endl;
-        word++;
-        return word;
-    }
-    else if(camino == 1){
-        while(*word != ' '){
-            palabra += *word;
-            word++;
-            int sigNumero = *word;
-            if(97 <= sigNumero <= 122 || 65 <= sigNumero <= 90) cout << "Es letra en lugar de numero" << endl;
-        }
-        word++;
-        return word;
-    }
-    else{
-        if(*word == ':'){
-            palabra += *word;
-            cout << token[palabra] << endl;
-            word++;
-        }
-        else if(*word == '='){
-            palabra += *word;
-            cout << token[palabra] << endl;
-            word++;
-        }
-        else if(*word == ';'){
-            palabra += *word;
-            word++;
-            if(*word == ' '){
-                cout << token[palabra] << endl;
-                word++;
-                return word;
-            }
-            else{
-                cout << "ERROR" << endl;
-                word++;
-                return word;
-            }
-
-        }
-        else if(*word == '+'){
-            palabra += *word;
-            word++;
-            if(*word == ' '){
-                cout << token[palabra] << endl;
-                word++;
-                return word;
-            }
-            else if(*word == '+'){
-                cout << token[palabra] << endl;
-                word += 2;
-                return word;
-            }
-        }
+void SkipWhiteSpace() {
+    // Continúa leyendo mientras el carácter actual sea un espacio en blanco
+    while (isspace(*peekcharcurrent)) {
+        peekcharcurrent++;
+        columna++;
     }
 }
 
-void getChar(string line)
-{
-    const char * iniValue = line.c_str();
+Token peekChar(){
+    word = "";
+    int columnaActual = columna;
+    if (isdigit(*peekcharcurrent)) {
+        while(isdigit(*peekcharcurrent)) {
+            word += *peekcharcurrent;
+            peekcharcurrent++;
+            columna++;
+        }
+        if(isalpha(*peekcharcurrent)){
+            while(isdigit(*peekcharcurrent) || isalpha(*peekcharcurrent)){
+                word += *peekcharcurrent;
+                peekcharcurrent++;
+                columna++;
+            }
+            return { TOKEN_UNKNOWN, word, fila, columnaActual };
+        }
+        SkipWhiteSpace();
+        return { TOKEN_INTEGER, word, fila, columnaActual };
+    }
+    else if(isalpha(*peekcharcurrent) || *peekcharcurrent == '_'){
+        while(isalpha(*peekcharcurrent) || *peekcharcurrent == '_'){
+            word += *peekcharcurrent;
+            peekcharcurrent++;
+            columna++;
+        }
+        if(isdigit(*peekcharcurrent)){
+            while(isdigit(*peekcharcurrent) || isalpha(*peekcharcurrent) || *peekcharcurrent == '_'){
+                word += *peekcharcurrent;
+                peekcharcurrent++;
+                columna++;
+            }
+            return { TOKEN_UNKNOWN, word, fila, columnaActual };
+        }
+        SkipWhiteSpace();
+        return { TOKEN_ID, word, fila, columnaActual };
+    }
+    else{
+        word += *peekcharcurrent;
+        peekcharcurrent++;
+        columna++;
+        SkipWhiteSpace();
+        return { TOKEN_UNKNOWN, word, fila, columnaActual };
+    }
+}
 
-    bool accepted = 1;
 
-    while(*iniValue != '\0'){
-        int value = *iniValue;
-        if(97 <= value <= 122 || 65 <= value <= 90){ // Detección del primer digito [a-z] o [A-Z]
-            iniValue = peekChar(iniValue, 0);
+void getChar(string linea){
+    getcharcurrent = peekcharcurrent = linea.c_str();
+    while(*getcharcurrent != '\0'){
+        while(*getcharcurrent != '\n' && *getcharcurrent != '\0') {
+
+            if (isalpha(*getcharcurrent) || *getcharcurrent == '_' || isdigit(*getcharcurrent)) {
+                tokens.push_back(peekChar());
+                getcharcurrent = peekcharcurrent;
+            }
+            else{
+                tokens.push_back(peekChar());
+                getcharcurrent = peekcharcurrent;
+            }
         }
-        else if(48 <= value <= 57){ // Detección del primer dígito numérico (Preguntar si vale que empiece con cero o es un error).
-            iniValue = peekChar(iniValue, 1);
-        }
-        else{
-            iniValue = peekChar(iniValue, 2);
-        }
+        fila++;
+        columna = 0;
     }
 }
 
@@ -111,6 +95,11 @@ int main()
     while (getline(archivo, linea))
     {
         getChar(linea);
+    }
+
+    for(auto token : tokens){
+        cout << "Token: " << token.value << ", Tipo: " << token.token
+        << ", Linea: " << token.fila << ", Columna: " << token.columna << endl;
     }
 
     return 0;
