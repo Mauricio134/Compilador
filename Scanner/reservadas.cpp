@@ -54,34 +54,25 @@ map<string, TokenType> Mapa_tokens ={
     {"while", TOKEN_WHILE}
 };
 
-/* {":", "DECLAR"},
-    {"=", "ASSIG"},
-    {";", "DELIM_SC"},
-    {"[", "DELIM_B_O"},
-    {"]", "DELIM_B_C"},
-    {"(", "DELIM_P_O"},
-    {")", "DELIM_P_C"},
-    {"+", "OPER_SUM"},
-    {"-", "OPER_REST"},
-    {"!", "OPER_EX"},
-    {"^", "OPER_EXP"},
-    {"*", "OPER_MUL"},
-    {"/", "OPER_DIV"},
-    {"%", "OPER_MOD"},
-    {"<", "OPER_MENOR"},
-    {">", "OPER_MAYOR"},
-    {"++", "OPER_S_SUMA"},
-    {"--", "OPER_S_RESTA"},
-    {">=", "OPER_MAY_E"},
-    {"<=", "OPER_MEN_E"},
-    {"==", "OPER_COMP_E"},
-    {"!=", "OPER_COMP_D"},
-    {"&&", "OPER_AND"},
-    {"||", "OPER_OR"},
-    {"//", "COMEN"},
-    {"nn", "COMEN_OPEN"},
-    {"/", "COMEN_CLOSED"}
-*/
+map<TokenType, string> tokenMap = {
+    {TOKEN_ID, "ID"}, {TOKEN_DECLAR, "DECLARACION"}, {TOKEN_ASIG, "ASIGNACION"}, {TOKEN_DELIM_SC, "DELIMITADOR_PUNTO_Y_COMA"},
+    {TOKEN_DELIM_B_O, "DELIMITADOR_CORCHETE_ABIERTO"}, {TOKEN_DELIM_B_C, "DELIMITADOR_CORCHETE_CERRADO"}, {TOKEN_DELIM_P_O, "DELIMITADOR_PARENTESI_ABIERTO"},
+    {TOKEN_DELIM_P_C, "DELIMITADOR_PARENTESIS_CERRADO"}, {TOKEN_OPER_SUM, "SUMA"}, {TOKEN_OPER_REST, "RESTA"},
+    {TOKEN_OPER_EX, "EXCLUSION"}, {TOKEN_OPER_EXP, "EXPONENCIAL"}, {TOKEN_OPER_MUL, "MULTIPLICACION"},
+    {TOKEN_OPER_DIV, "DIVISION"}, {TOKEN_OPER_MOD, "MODULO"}, {TOKEN_OPER_MENOR, "MENOR"},
+    {TOKEN_OPER_MAYOR, "MAYOR"}, {TOKEN_OPER_S_SUMA, "SUPER_SUMA"}, {TOKEN_OPER_S_RESTA, "SUPER_RESTA"},
+    {TOKEN_OPER_MAY_E, "MAYOR_IGUAL"}, {TOKEN_OPER_MEN_E, "MENOR_IGUAL"}, {TOKEN_OPER_COMP_E, "IGUAL"},
+    {TOKEN_OPER_COMP_D, "OPER_COMP_D"}, {TOKEN_OPER_AND, "OPER_AND"}, {TOKEN_OPER_OR, "OPER_OR"},
+    {TOKEN_COMEN, "COMENTARIO"}, {TOKEN_COMEN_OPEN, "COMENTARIO_ABIERTO"}, {TOKEN_COMEN_CLOSE, "COMENTARIO_CERRADO"},
+    {TOKEN_UNKNOWN, "DESCONOCIDO"}, {TOKEN_EOF, "FINAL_DE_LINEA"}, {TOKEN_INTEGER, "INTEGER"},
+    {TOKEN_LL_O, "LLAVE_ABIERTA"}, {TOKEN_LL_C, "LLAVE_CERRADA"}, {TOKEN_COMA, "COMA"}, {TOKEN_ARRAY, "ARRAY"},
+    {TOKEN_BOOLEAN, "BOOLEAN"}, {TOKEN_CHAR, "CHARACTER"}, {TOKEN_ELSE, "ELSE"}, {TOKEN_FALSE, "FALSE"},
+    {TOKEN_FOR, "FOR"}, {TOKEN_FUNCTION, "FUNCTION"}, {TOKEN_IF, "IF"}, {TOKEN_PRINT, "PRINT"},
+    {TOKEN_RETURN, "RETURN"}, {TOKEN_STRING, "STRING"}, {TOKEN_TRUE, "TRUE"}, {TOKEN_VOID, "VOID"},
+    {TOKEN_WHILE, "WHILE"}
+};
+
+
 
 bool reservedWord(string word){
     if(reservadas.count(word) == true) return true;

@@ -308,7 +308,7 @@ int main()
     }
 
     for(auto token : tokens){
-        cout << "Token: " << token.value << ", Tipo: " << token.token
+        cout << "Token: " << token.value << ", Tipo: " << tokenMap[token.token]
         << ", Linea: " << token.fila << ", Columna: " << token.columna << endl;
     }
 
