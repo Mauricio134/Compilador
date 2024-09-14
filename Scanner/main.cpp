@@ -397,16 +397,8 @@ void getChar(string linea)
         while (*getcharcurrent != '\n' && *getcharcurrent != '\0')
         {
             SkipWhiteSpace();
-            if (isalpha(*getcharcurrent) || *getcharcurrent == '_' || isdigit(*getcharcurrent))
-            {
-                tokens.push_back(peekChar());
-                getcharcurrent = peekcharcurrent;
-            }
-            else
-            {
-                tokens.push_back(peekChar());
-                getcharcurrent = peekcharcurrent;
-            }
+            tokens.push_back(peekChar());
+            getcharcurrent=peekcharcurrent;
         }
         fila++;
         columna = 0;
