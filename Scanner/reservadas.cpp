@@ -19,7 +19,9 @@ enum TokenType {
     TOKEN_OPER_DIV, TOKEN_OPER_MOD, TOKEN_OPER_MENOR, TOKEN_OPER_MAYOR,
     TOKEN_OPER_S_SUMA, TOKEN_OPER_S_RESTA, TOKEN_OPER_MAY_E, TOKEN_OPER_MEN_E,
     TOKEN_OPER_COMP_E, TOKEN_OPER_COMP_D, TOKEN_OPER_AND, TOKEN_OPER_OR,
-    TOKEN_COMEN, TOKEN_COMEN_OPEN, TOKEN_COMEN_CLOSE, TOKEN_UNKNOWN, TOKEN_EOF,TOKEN_INTEGER
+    TOKEN_COMEN, TOKEN_COMEN_OPEN, TOKEN_COMEN_CLOSE, TOKEN_UNKNOWN, TOKEN_EOF,TOKEN_INTEGER,
+    TOKEN_LL_O, TOKEN_LL_C, TOKEN_COMA,TOKEN_ARRAY, TOKEN_BOOLEAN,TOKEN_CHAR,TOKEN_ELSE,TOKEN_FALSE,TOKEN_FOR,TOKEN_FUNCTION,
+    TOKEN_IF,TOKEN_PRINT,TOKEN_RETURN,TOKEN_STRING,TOKEN_TRUE,TOKEN_VOID,TOKEN_WHILE
 };
 
 class Token{
@@ -34,23 +36,25 @@ vector<Token> tokens;
 
 set<string> reservadas = {"array" , "boolean" , "char" , "else" , "false" , "for" , "function" , "if" , "integer" , "print" , "return" , "string" , "true" , "void" , "while"};
 
-map<string, string> token = {
-    {"array", "ARRAY"},
-    {"boolean", "BOOLEAN"},
-    {"char", "CHARACTER"},
-    {"else", "COND_ELSE"},
-    {"false", "FALSE"},
-    {"for", "LOOP_FOR"},
-    {"function", "FUNCTION"},
-    {"if", "COND_IF"},
-    {"integer", "INTEGER"},
-    {"print", "PRINT"},
-    {"return", "RETURN"},
-    {"string", "STRING"},
-    {"true", "TRUE"},
-    {"void", "VOID"},
-    {"while", "LOOP_WHILE"},
-    {":", "DECLAR"},
+map<string, TokenType> Mapa_tokens ={
+    {"array", TOKEN_ARRAY},
+    {"boolean", TOKEN_BOOLEAN},
+    {"char", TOKEN_CHAR},
+    {"else", TOKEN_ELSE},
+    {"false", TOKEN_FALSE},
+    {"for", TOKEN_FOR},
+    {"function", TOKEN_FUNCTION},
+    {"if", TOKEN_IF},
+    {"integer", TOKEN_INTEGER},
+    {"print", TOKEN_PRINT},
+    {"return", TOKEN_RETURN},
+    {"string", TOKEN_STRING},
+    {"true", TOKEN_TRUE},
+    {"void", TOKEN_VOID},
+    {"while", TOKEN_WHILE}
+};
+
+/* {":", "DECLAR"},
     {"=", "ASSIG"},
     {";", "DELIM_SC"},
     {"[", "DELIM_B_O"},
@@ -75,9 +79,9 @@ map<string, string> token = {
     {"&&", "OPER_AND"},
     {"||", "OPER_OR"},
     {"//", "COMEN"},
-    {"/*", "COMEN_OPEN"},
-    {"*/", "COMEN_CLOSED"}
-};
+    {"nn", "COMEN_OPEN"},
+    {"/", "COMEN_CLOSED"}
+*/
 
 bool reservedWord(string word){
     if(reservadas.count(word) == true) return true;
