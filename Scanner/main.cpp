@@ -5,32 +5,71 @@
 
 using namespace std;
 
+
 void SkipWhiteSpace()
 {
-    // Continúa leyendo mientras el carácter actual sea un espacio en blanco
+    // Ignorar espacios en blanco
     while (isspace(*peekcharcurrent))
     {
+        if (*peekcharcurrent == '\n')
+        {
+            fila++;
+            columna = 0;
+        }
         peekcharcurrent++;
         columna++;
     }
 
-    // Manejo de comentarios de una sola línea
+    // Manejo de comentarios
     if (*peekcharcurrent == '/')
     {
         peekcharcurrent++;
         columna++;
 
+        // Comentario de línea "//"
         if (*peekcharcurrent == '/')
         {
-            // Es un comentario de una sola línea
-            peekcharcurrent++;
-            columna++;
-
+            // Ignorar hasta el final de la línea
             while (*peekcharcurrent != '\n' && *peekcharcurrent != '\0')
             {
                 peekcharcurrent++;
                 columna++;
             }
+            fila++;
+        }
+        // Comentario de bloque "/*"
+        else if (*peekcharcurrent == '*')
+        {
+            // Marcar que estamos dentro de un comentario de bloque
+            Comment_block = true;
+            peekcharcurrent++;
+            columna++;
+
+            // Ignorar hasta encontrar "*/"
+            while (*peekcharcurrent != '\0')
+            {
+                if (*peekcharcurrent == '*' && *(peekcharcurrent + 1) == '/')
+                {
+                    peekcharcurrent += 2; // Avanzar más allá del "*/"
+                    columna += 2;
+                    Comment_block = false; // Fin del comentario de bloque
+                    break;
+                }
+
+                if (*peekcharcurrent == '\n')
+                {
+                    fila++;
+                    columna = 0;
+                }
+                else
+                {
+                    columna++;
+                }
+                peekcharcurrent++;
+            }
+        }
+        else{
+            peekcharcurrent--;
         }
     }
 }
@@ -199,44 +238,23 @@ Token peekChar()
             SkipWhiteSpace();
             return {TOKEN_OPER_EXP, word, fila, columnaActual};
         case '*':
-            word += *peekcharcurrent;
+        {
+            word += *peekcharcurrent; // Agrega el carácter '*' al token
             peekcharcurrent++;
             columna++;
-            if (*peekcharcurrent == '/')
-            {
-                word += *peekcharcurrent;
-                peekcharcurrent++;
-                columna++;
-                doble = 1;
-            }
             SkipWhiteSpace();
-            if (doble)
-                return {TOKEN_COMEN_CLOSE, word, fila, columnaActual};
-            return {TOKEN_OPER_MUL, word, fila, columnaActual};
+            return {TOKEN_OPER_MUL, word, fila, columnaActual}; // Operador de multiplicación
+        }
+
         case '/':
-            word += *peekcharcurrent;
+        {
+            word += *peekcharcurrent; // Agrega el carácter '/' al token
             peekcharcurrent++;
             columna++;
-            if (*peekcharcurrent == '*')
-            {
-                word += *peekcharcurrent;
-                peekcharcurrent++;
-                columna++;
-                doble = 1;
-            }
-            else if (*peekcharcurrent == '/')
-            {
-                word += *peekcharcurrent;
-                peekcharcurrent++;
-                columna++;
-                doble = 2;
-            }
             SkipWhiteSpace();
-            if (d == 1)
-                return {TOKEN_COMEN_OPEN, word, fila, columnaActual};
-            else if (d == 2)
-                return {TOKEN_COMEN, word, fila, columnaActual};
-            return {TOKEN_OPER_DIV, word, fila, columnaActual};
+            return {TOKEN_OPER_DIV, word, fila, columnaActual}; // Operador de división
+        }
+
         case '%':
             word += *peekcharcurrent;
             peekcharcurrent++;
@@ -392,18 +410,53 @@ Token peekChar()
 void getChar(string linea)
 {
     getcharcurrent = peekcharcurrent = linea.c_str();
+
     while (*getcharcurrent != '\0')
     {
+        // Si estamos dentro de un comentario de bloque, seguir ignorando hasta el cierre "*/"
+        if (Comment_block)
+        {
+            while (*peekcharcurrent != '\0' && *peekcharcurrent!='\n')
+            {
+                if (*peekcharcurrent == '*' && *(peekcharcurrent + 1) == '/')
+                {
+                    // Encontramos el cierre del comentario de bloque "*/"
+                    peekcharcurrent += 2;
+                    columna += 2;
+                    Comment_block = false; // Salimos del comentario de bloque
+                    break;
+                }
+                else
+                {
+                   columna++;
+                    peekcharcurrent++;
+                }
+            }
+
+            getcharcurrent = peekcharcurrent;
+            continue;
+        }
+
         while (*getcharcurrent != '\n' && *getcharcurrent != '\0')
         {
-            SkipWhiteSpace();
+            SkipWhiteSpace(); // Ignorar espacios en blanco y comentarios
+
+            // Si SkipWhiteSpace ha ignorado todo (como comentarios), continuar
+            if (*peekcharcurrent == '\0' || *peekcharcurrent == '\n') {
+                break; 
+            }
+
+            // Procesar el siguiente token usando peekChar
             tokens.push_back(peekChar());
-            getcharcurrent=peekcharcurrent;
+
+            getcharcurrent = peekcharcurrent;
         }
+
         fila++;
         columna = 0;
     }
 }
+
 
 int main()
 {

@@ -11,6 +11,7 @@ int fila = 0;
 string word;
 const char * getcharcurrent = nullptr;
 const char * peekcharcurrent = nullptr;
+bool Comment_block=0;
 
 enum TokenType {
     TOKEN_ID, TOKEN_DECLAR, TOKEN_ASIG, TOKEN_DELIM_SC, TOKEN_DELIM_B_O,
