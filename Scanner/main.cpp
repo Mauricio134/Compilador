@@ -466,12 +466,25 @@ int main()
     {
         getChar(linea);
     }
-
+    cout <<"INFO SCAN - Start scanning…"<<endl;
     for (auto token : tokens)
     {
-        cout << "Token: " << token.value << ", Tipo: " << tokenMap[token.token]
-             << ", Linea: " << token.fila << ", Columna: " << token.columna << endl;
+        /*cout << "Token: " << token.value << ", Tipo: " << tokenMap[token.token]
+             << ", Linea: " << token.fila << ", Columna: " << token.columna << endl;*/
+        if (tokenMap[token.token]!="DESCONOCIDO")
+        {
+            cout<<"DEBUG SCAN - "<<tokenMap[token.token]<<" ["<<token.value<<"] found at ("<<token.fila<<":"<<token.columna<<")"<<endl;
+        }else{
+            token_errores.push_back(token);
+        }
     }
+    cout <<endl<<"INFO SCAN - Completed with "<<token_errores.size()<<" errors"<<endl;
+
+    for (auto token:token_errores)
+    {
+        cout<<"DEBUG SCAN ERROR - "<<tokenMap[token.token]<<" ["<<token.value<<"] found at ("<<token.fila<<":"<<token.columna<<")"<<endl;
+    }
+    
 
     return 0;
 }

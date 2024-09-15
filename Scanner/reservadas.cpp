@@ -34,6 +34,7 @@ public:
 };
 
 vector<Token> tokens;
+vector<Token> token_errores;
 
 set<string> reservadas = {"array" , "boolean" , "char" , "else" , "false" , "for" , "function" , "if" , "integer" , "print" , "return" , "string" , "true" , "void" , "while"};
 
