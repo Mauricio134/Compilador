@@ -29,7 +29,6 @@ void SkipWhiteSpace()
         // Comentario de línea "//"
         if (*peekcharcurrent == '/')
         {
-            // Ignorar hasta el final de la línea
             while (*peekcharcurrent != '\n' && *peekcharcurrent != '\0')
             {
                 peekcharcurrent++;
@@ -52,7 +51,7 @@ void SkipWhiteSpace()
                 {
                     peekcharcurrent += 2; // Avanzar más allá del "*/"
                     columna += 2;
-                    Comment_block = false; // Fin del comentario de bloque
+                    Comment_block = false; 
                     break;
                 }
 
@@ -239,7 +238,7 @@ Token peekChar()
             return {TOKEN_OPER_EXP, word, fila, columnaActual};
         case '*':
         {
-            word += *peekcharcurrent; // Agrega el carácter '*' al token
+            word += *peekcharcurrent; 
             peekcharcurrent++;
             columna++;
             SkipWhiteSpace();
@@ -248,7 +247,7 @@ Token peekChar()
 
         case '/':
         {
-            word += *peekcharcurrent; // Agrega el carácter '/' al token
+            word += *peekcharcurrent; 
             peekcharcurrent++;
             columna++;
             SkipWhiteSpace();
@@ -337,33 +336,29 @@ Token peekChar()
             return {TOKEN_COMA, word, fila, columnaActual};
 
         case '\'':
-            word += *peekcharcurrent; // Agregar la primera comilla simple a la palabra
+            word += *peekcharcurrent; 
             peekcharcurrent++;
             columna++;
 
-            // Leer el carácter entre las comillas simples
             if (*peekcharcurrent != '\'' && *peekcharcurrent != '\0')
             {
-                word += *peekcharcurrent; // Agregar el carácter a la palabra
+                word += *peekcharcurrent; 
                 peekcharcurrent++;
                 columna++;
             }
             else
             {
-                // Error: no se encontró un carácter entre comillas simples
                 return {TOKEN_UNKNOWN, word, fila, columnaActual};
             }
 
-            // Esperar la comilla simple de cierre
             if (*peekcharcurrent == '\'')
             {
-                word += *peekcharcurrent; // Agregar la comilla de cierre
+                word += *peekcharcurrent; 
                 peekcharcurrent++;
                 columna++;
             }
             else
             {
-                // Error: no se encontró la comilla simple de cierre
                 return {TOKEN_UNKNOWN, word, fila, columnaActual};
             }
 
@@ -371,27 +366,25 @@ Token peekChar()
             return {TOKEN_CHAR, word, fila, columnaActual};
 
         case '"':
-            word += *peekcharcurrent; // Agregar la primera comilla a la palabra
+            word += *peekcharcurrent;
             peekcharcurrent++;
             columna++;
 
-            // Recorremos los caracteres hasta encontrar la comilla de cierre o fin de archivo
             while (*peekcharcurrent != '"' && *peekcharcurrent != '\0')
             {
-                word += *peekcharcurrent; // Agregar los caracteres de la cadena
+                word += *peekcharcurrent; 
                 peekcharcurrent++;
                 columna++;
             }
 
             if (*peekcharcurrent == '"')
             {
-                word += *peekcharcurrent; // Agregar la comilla de cierre
+                word += *peekcharcurrent; 
                 peekcharcurrent++;
                 columna++;
             }
             else
             {
-                // Si llegamos al final de la línea o archivo sin encontrar la comilla de cierre
                 return {TOKEN_UNKNOWN, word, fila, columnaActual};
             }
 
@@ -420,7 +413,6 @@ void getChar(string linea)
             {
                 if (*peekcharcurrent == '*' && *(peekcharcurrent + 1) == '/')
                 {
-                    // Encontramos el cierre del comentario de bloque "*/"
                     peekcharcurrent += 2;
                     columna += 2;
                     Comment_block = false; // Salimos del comentario de bloque
@@ -441,12 +433,10 @@ void getChar(string linea)
         {
             SkipWhiteSpace(); // Ignorar espacios en blanco y comentarios
 
-            // Si SkipWhiteSpace ha ignorado todo (como comentarios), continuar
             if (*peekcharcurrent == '\0' || *peekcharcurrent == '\n') {
                 break; 
             }
 
-            // Procesar el siguiente token usando peekChar
             tokens.push_back(peekChar());
 
             getcharcurrent = peekcharcurrent;
