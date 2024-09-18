@@ -424,7 +424,7 @@ void getChar(string linea)
                     peekcharcurrent++;
                 }
             }
-
+            fila++;
             getcharcurrent = peekcharcurrent;
             continue;
         }
