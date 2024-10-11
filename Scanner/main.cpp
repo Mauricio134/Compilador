@@ -466,6 +466,9 @@ int main()
         cout<<"DEBUG SCAN ERROR - "<<tokenMap[token.token]<<" ["<<token.value<<"] found at ("<<token.fila<<":"<<token.columna<<")"<<endl;
     }
     
+    cout <<"INFO SCAN - Start parsing…"<<endl;
+    nextToken();
+    Program();
 
 
 
