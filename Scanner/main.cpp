@@ -2,7 +2,7 @@
 #include <fstream>
 #include <string>
 #include "../Scanner/reservadas.cpp"
-
+#include "../Scanner/parser.cpp"
 using namespace std;
 
 
@@ -452,8 +452,6 @@ int main()
     cout <<"INFO SCAN - Start scanning…"<<endl;
     for (auto token : tokens)
     {
-        /*cout << "Token: " << token.value << ", Tipo: " << tokenMap[token.token]
-             << ", Linea: " << token.fila << ", Columna: " << token.columna << endl;*/
         if (tokenMap[token.token]!="DESCONOCIDO")
         {
             cout<<"DEBUG SCAN - "<<tokenMap[token.token]<<" ["<<token.value<<"] found at ("<<token.fila<<":"<<token.columna<<")"<<endl;
@@ -468,6 +466,8 @@ int main()
         cout<<"DEBUG SCAN ERROR - "<<tokenMap[token.token]<<" ["<<token.value<<"] found at ("<<token.fila<<":"<<token.columna<<")"<<endl;
     }
     
+
+
 
     return 0;
 }

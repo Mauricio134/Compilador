@@ -21,7 +21,7 @@ enum TokenType {
     TOKEN_OPER_COMP_E, TOKEN_OPER_COMP_D, TOKEN_OPER_AND, TOKEN_OPER_OR,
     TOKEN_COMEN, TOKEN_COMEN_OPEN, TOKEN_COMEN_CLOSE, TOKEN_UNKNOWN, TOKEN_EOF,TOKEN_INTEGER,
     TOKEN_LL_O, TOKEN_LL_C, TOKEN_COMA,TOKEN_ARRAY, TOKEN_BOOLEAN,TOKEN_CHAR,TOKEN_ELSE,TOKEN_FALSE,TOKEN_FOR,TOKEN_FUNCTION,
-    TOKEN_IF,TOKEN_PRINT,TOKEN_RETURN,TOKEN_STRING,TOKEN_TRUE,TOKEN_VOID,TOKEN_WHILE
+    TOKEN_IF,TOKEN_PRINT,TOKEN_RETURN,TOKEN_STRING,TOKEN_TRUE,TOKEN_VOID,TOKEN_WHILE,TOKEN_VAR
 };
 
 class Token{
@@ -35,7 +35,7 @@ public:
 vector<Token> tokens;
 vector<Token> token_errores;
 
-set<string> reservadas = {"array" , "boolean" , "char" , "else" , "false" , "for" , "function" , "if" , "integer" , "print" , "return" , "string" , "true" , "void" , "while"};
+set<string> reservadas = {"array" , "boolean" , "char" , "else" , "false" , "for" , "function" , "if" , "integer" , "print" , "return" , "string" , "true" , "void" , "while", "VAR"};
 
 map<string, TokenType> Mapa_tokens ={
     {"array", TOKEN_ARRAY},
@@ -52,7 +52,8 @@ map<string, TokenType> Mapa_tokens ={
     {"string", TOKEN_STRING},
     {"true", TOKEN_TRUE},
     {"void", TOKEN_VOID},
-    {"while", TOKEN_WHILE}
+    {"while", TOKEN_WHILE},
+    {"VAR",TOKEN_VAR}
 };
 
 map<TokenType, string> tokenMap = {
@@ -70,7 +71,7 @@ map<TokenType, string> tokenMap = {
     {TOKEN_BOOLEAN, "BOOLEAN"}, {TOKEN_CHAR, "CHARACTER"}, {TOKEN_ELSE, "ELSE"}, {TOKEN_FALSE, "FALSE"},
     {TOKEN_FOR, "FOR"}, {TOKEN_FUNCTION, "FUNCTION"}, {TOKEN_IF, "IF"}, {TOKEN_PRINT, "PRINT"},
     {TOKEN_RETURN, "RETURN"}, {TOKEN_STRING, "STRING"}, {TOKEN_TRUE, "TRUE"}, {TOKEN_VOID, "VOID"},
-    {TOKEN_WHILE, "WHILE"}
+    {TOKEN_WHILE, "WHILE"},{TOKEN_VAR, "VAR"}
 };
 
 
