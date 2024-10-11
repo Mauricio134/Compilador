@@ -4,20 +4,26 @@
 #include <map>
 #include <vector>
 #include "../Scanner/reservadas.cpp"
+#include "../Scanner/parser.h"
 
 size_t currentTokenIndex = 0; // Índice actual en la lista de tokens
 Token currentToken;
+bool error_bool=0;
 
 using namespace std;
 
+
+
+
 void error(const string &mensaje) {
-    cerr << "Error: " << mensaje << " en la línea " << currentToken.fila << ", columna " << currentToken.columna << ". Token encontrado: " << currentToken.value << endl;
-    // Puedes agregar alguna forma de recuperación o finalizar el proceso
+    cout << "Error: " << mensaje << " en la línea " << currentToken.fila << ", columna " << currentToken.columna << ". Token encontrado: " << currentToken.value << endl;
+    error_bool=1;
 }
 
 
 // Obtener el siguiente token
 void nextToken() {
+    //cout<<"Entro en la funcion";
     if (currentTokenIndex < tokens.size()) {
         currentToken = tokens[currentTokenIndex];
         currentTokenIndex++;
@@ -39,6 +45,10 @@ bool match(TokenType expected) {
 void Program() {
     Declaration();
     ProgramPrime();
+    if (!error_bool){
+        cout<<"\nPROGRAMA ACEPTADO\n";
+    }
+    
 }
 
 void ProgramPrime() {
@@ -86,9 +96,9 @@ void VarDeclTail() {
 }
 
 void Function() {
-    if (!match(TOKEN_FUNCTION)) {  // Verificamos si empieza con la palabra clave 'function'
+    /*if (!match(TOKEN_FUNCTION)) {  // Verificamos si empieza con la palabra clave 'function'
         error("Se esperaba 'function'.");
-    }
+    }*/
 
     Type();  // Procesamos el tipo de retorno de la función
 
@@ -160,7 +170,7 @@ void Params() {
 void ParamsTail() {
     if (match(TOKEN_COMA)) {  // Si encontramos una coma, esperamos otro parámetro
         Params();  // Llamada recursiva para manejar el siguiente parámetro
-    }
+    };
     // Si no hay coma, terminamos la lista de parámetros
 }
 
@@ -214,7 +224,7 @@ void Statement() {
 void ForStmt() {
     if (!match(TOKEN_DELIM_P_O)) {
         error("Se esperaba '(' después de 'for'.");
-    }
+    };
 
     // Procesamos la inicialización, que es una sentencia de expresión
     ExprStmt();
@@ -252,7 +262,7 @@ void PrintStmt() {
 
     ExprList();  // Procesamos la lista de expresiones
 
-    if (!match(TOKEN_DELIM_P_O)) {
+    if (!match(TOKEN_DELIM_P_C)) {
         error("Se esperaba ')' después de la lista de expresiones.");
     }
 

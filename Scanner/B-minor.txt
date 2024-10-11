@@ -1,1 +1,8 @@
-VAR integer ID ;
+function integer main ( integer ID ) { 
+	for(integer ; integer ; ;){
+		return integer ;
+	}
+}
+
+ID (integer);
+
