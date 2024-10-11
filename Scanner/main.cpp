@@ -189,31 +189,13 @@ Token peekChar()
             word += *peekcharcurrent;
             peekcharcurrent++;
             columna++;
-            if (*peekcharcurrent == '+')
-            {
-                word += *peekcharcurrent;
-                peekcharcurrent++;
-                columna++;
-                doble = 1;
-            }
             SkipWhiteSpace();
-            if (doble)
-                return {TOKEN_OPER_S_SUMA, word, fila, columnaActual};
             return {TOKEN_OPER_SUM, word, fila, columnaActual};
         case '-':
             word += *peekcharcurrent;
             peekcharcurrent++;
             columna++;
-            if (*peekcharcurrent == '-')
-            {
-                word += *peekcharcurrent;
-                peekcharcurrent++;
-                columna++;
-                doble = 1;
-            }
             SkipWhiteSpace();
-            if (doble)
-                return {TOKEN_OPER_S_RESTA, word, fila, columnaActual};
             return {TOKEN_OPER_REST, word, fila, columnaActual};
         case '!':
             word += *peekcharcurrent;
