@@ -57,5 +57,5 @@ void Primary();
 void FactorPrime();
 void PrimaryTail();
 void IfStmt();
-void ElseIfList()
-void extra()
+void ElseIfList();
+void extra();
