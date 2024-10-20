@@ -190,16 +190,17 @@ void StmtListPrime() {
 bool nextTokenIsStatement() {
     return (currentToken.token == TOKEN_IF || currentToken.token == TOKEN_WHILE ||
             currentToken.token == TOKEN_RETURN || currentToken.token == TOKEN_ID ||
-            currentToken.token == TOKEN_PRINT || currentToken.token == TOKEN_VAR);
+            currentToken.token == TOKEN_PRINT || currentToken.token == TOKEN_VAR || 
+            currentToken.token == TOKEN_FOR || currentToken.token == TOKEN_ASIG);
 }
 
 void Statement() {
     if (match(TOKEN_VAR)) {  // Si encontramos 'VAR', procesamos una declaración de variable
         VarDecl();  
     } 
-    /*else if (match(TOKEN_IF)) {  // Si encontramos 'IF', procesamos una sentencia condicional
+    else if (match(TOKEN_IF)) {  // Si encontramos 'IF', procesamos una sentencia condicional
         IfStmt();
-    } */
+    } 
     else if (match(TOKEN_FOR)) {  // Si encontramos 'FOR', procesamos una sentencia de bucle for
         ForStmt();
     } 
@@ -217,6 +218,49 @@ void Statement() {
     } 
     else {  // De lo contrario, consideramos que es una expresión
         ExprStmt();
+    }
+}
+
+
+
+void IfStmt(){
+    if (!match(TOKEN_DELIM_P_O)) {
+        error("Se esperaba '(' después de 'for'.");
+    };  
+
+    Expression();
+
+    if (!match(TOKEN_DELIM_P_C)) {
+        error("Se esperaba ')' después de 'for'.");
+    };  
+
+    if (!match(TOKEN_LL_O)){
+        Statement();
+        if (!match(TOKEN_LL_C)) {
+            error("Se esperaba '}' después de la lista de sentencias.");
+        }
+
+        ElseIfList();
+    }
+    
+}
+
+
+void extra(){
+    if (match(TOKEN_IF)) {  // Si encontramos 'IF', procesamos una sentencia condicional
+        IfStmt();
+    } else if (match(TOKEN_LL_O)) {  // Si encontramos '{', procesamos un bloque de código (lista de sentencias)
+        StmtList();
+        if (!match(TOKEN_LL_C)) {
+            error("Se esperaba '}' después de la lista de sentencias.");
+        }
+    }
+}
+
+
+void ElseIfList(){
+    if(match(TOKEN_ELSE)){
+        extra();
     }
 }
 
