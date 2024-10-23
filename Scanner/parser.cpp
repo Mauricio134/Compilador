@@ -328,7 +328,6 @@ void ExprStmt() {
         // Caso de un punto y coma vacío, no hay nada que procesar
         return;
     }
-
     // Si no es un punto y coma vacío, procesamos la expresión
     Expression();
 
@@ -345,7 +344,7 @@ void ExprStmt() {
 
 
 void Expression() {
-    if (match(TOKEN_ASIG)) { 
+    if (match(TOKEN_ASIG)) {
         if (!match(TOKEN_ID)) {
             error("Se esperaba un identificador después de 'ASSIGN'.");
         }

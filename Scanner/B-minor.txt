@@ -1,2 +1,40 @@
-a; //hola
+function integer example(integer mauricio){
+	for(ASSIGN i = 1 ; i < mauricio; i;){
+		print("hola");
+	}
+}
 
+function void main(void argv){
+	VAR integer entero = 0;
+	VAR boolean falver = TRUE;
+	VAR char character = 'a';
+	VAR string cadena = "hola\n";
+
+	ASSIGN sum = entero + 1;
+	ASSIGN res = entero - 10;
+	ASSIGN mul = entero * 10;
+	ASSIGN div = entero / 10;
+
+	if(10 == 2){
+		return example(sum);
+	}
+	else if(2 != 8){
+		if(12 > 3){
+			print(8);
+		}
+		return 1;
+	}
+
+	if(12 >= 3){
+		print(8);
+	}
+	else{
+		return 4;
+	}
+
+	if(falver && TRUE){
+		ASSIGN sum = 1 + 1; 
+	}
+
+	ASSIGN nuevoBool = !falver;
+}
