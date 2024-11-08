@@ -1,0 +1,32 @@
+graph {
+	node[fontsize=10,margin=0,width=".4", height=".3"];
+	subgraph cluster17{
+		nnode_0[label="HEAD_NODE"];
+		nnode_1[label="FUNCTION"];
+		nnode_0--nnode_1;
+		nnode_2[label="integer"];
+		nnode_1--nnode_2;
+		nnode_3[label="foo"];
+		nnode_1--nnode_3;
+		nnode_4[label="params"];
+		nnode_1--nnode_4;
+		nnode_6[label="param"];
+		nnode_4--nnode_6;
+		nnode_5[label="void"];
+		nnode_6--nnode_5;
+		nnode_7[label="x"];
+		nnode_6--nnode_7;
+		nnode_8[label="StmtList"];
+		nnode_1--nnode_8;
+		nnode_9[label="VAR_DECL"];
+		nnode_8--nnode_9;
+		nnode_10[label="integer"];
+		nnode_9--nnode_10;
+		nnode_12[label="ASSIGN"];
+		nnode_9--nnode_12;
+		nnode_11[label="y"];
+		nnode_12--nnode_11;
+		nnode_13[label="20"];
+		nnode_12--nnode_13;
+	}
+}

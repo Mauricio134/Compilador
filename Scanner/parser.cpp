@@ -5,6 +5,7 @@
 #include <vector>
 #include "../Scanner/reservadas.cpp"
 #include "../Scanner/parser.h"
+#include "../Scanner/astree.hpp"
 
 size_t currentTokenIndex = 0; // Índice actual en la lista de tokens
 Token currentToken;
@@ -12,9 +13,53 @@ bool error_bool=0;
 
 using namespace std;
 
+using ASTNode=ASTree::ASTNode<TokenType>;
+auto syntaxTree = ASTNode::GetNewInstance(TokenType::TOKEN_PROGRAM, "HEAD_NODE");
 
 
 
+std::shared_ptr<ASTNode> Declaration();
+std::shared_ptr<ASTNode> ProgramPrime();
+std::shared_ptr<ASTNode> VarDecl();
+std::shared_ptr<ASTNode> Function();
+std::shared_ptr<ASTNode> Type();
+std::shared_ptr<ASTNode> VarDeclTail(std::shared_ptr<ASTNode> idNode);
+std::shared_ptr<ASTNode> Expression();
+std::shared_ptr<ASTNode> Params();
+std::shared_ptr<ASTNode> StmrList();
+std::shared_ptr<ASTNode> TypePrime(std::shared_ptr<ASTNode> baseTypeNode);
+void ParamsTail(std::shared_ptr<ASTNode> paramsNode);
+std::shared_ptr<ASTNode> PrintStmt();
+std::shared_ptr<ASTNode> Statement();
+void StmtListPrime(std::shared_ptr<ASTNode> stmtListNode);
+std::shared_ptr<ASTNode> StmtList();
+bool nextTokenIsStatement();
+std::shared_ptr<ASTNode> ForStmt();
+std::shared_ptr<ASTNode> ReturnStmt();
+std::shared_ptr<ASTNode> ExprStmt();
+std::shared_ptr<ASTNode> ExprList();
+std::shared_ptr<ASTNode> OrExpr();
+std::shared_ptr<ASTNode> AndExpr();
+std::shared_ptr<ASTNode> OrExprPrime(std::shared_ptr<ASTNode> leftNode);
+std::shared_ptr<ASTNode> EqExpr();
+std::shared_ptr<ASTNode> AndExprPrime(std::shared_ptr<ASTNode> leftNode) ;
+std::shared_ptr<ASTNode> EqExprPrime(std::shared_ptr<ASTNode> leftNode);
+std::shared_ptr<ASTNode> RelExpr();
+std::shared_ptr<ASTNode> Expr();
+std::shared_ptr<ASTNode> RelExprPrime(std::shared_ptr<ASTNode> leftNode);
+std::shared_ptr<ASTNode> Term();
+std::shared_ptr<ASTNode> ExprPrime(std::shared_ptr<ASTNode> leftNode);
+std::shared_ptr<ASTNode> Unary();
+std::shared_ptr<ASTNode> TermPrime(std::shared_ptr<ASTNode> leftNode);
+std::shared_ptr<ASTNode> Factor();
+std::shared_ptr<ASTNode> Primary();
+std::shared_ptr<ASTNode> FactorPrime(std::shared_ptr<ASTNode> leftNode);
+std::shared_ptr<ASTNode> PrimaryTail(std::shared_ptr<ASTNode> idNode);
+std::shared_ptr<ASTNode> IfStmt();
+std::shared_ptr<ASTNode> ElseIfList();
+std::shared_ptr<ASTNode> extra();
+
+Token auxiliar;
 void error(const string &mensaje) {
     cout << "Error: " << mensaje << " en la línea " << currentToken.fila << ", columna " << currentToken.columna << ". Token encontrado: " << currentToken.value << endl;
     error_bool=1;
@@ -42,6 +87,7 @@ void nextToken() {
 // Verificar si el token actual es del tipo esperado
 bool match(TokenType expected) {
     if (currentToken.token == expected) {
+        auxiliar.value=currentToken.value;
         nextToken(); // Avanzamos al siguiente token si es correcto
         return true;
     }
@@ -50,7 +96,10 @@ bool match(TokenType expected) {
 
 
 void Program() {
-    Declaration();
+    auto declarationNode = Declaration();
+    if (declarationNode != nullptr) {
+        syntaxTree->addChild(declarationNode);
+    }
     ProgramPrime();
     if (!error_bool){
         cout<<"\nPROGRAMA ACEPTADO\n";
@@ -58,152 +107,308 @@ void Program() {
     
 }
 
-void ProgramPrime() {
-    if (currentToken.token == TOKEN_VAR || currentToken.token == TOKEN_FUNCTION) {
-        Declaration();
-        ProgramPrime();
+std::shared_ptr<ASTNode> ProgramPrime() {
+    auto programPrimeNode = ASTNode::GetNewInstance(TokenType::Default, "PROGRAM_PRIME");
+
+    while (currentToken.token == TOKEN_VAR || currentToken.token == TOKEN_FUNCTION) {
+        // Analizar una declaración y añadirla como hijo
+        auto declarationNode = Declaration();
+        if (declarationNode != nullptr) {
+            programPrimeNode->addChild(declarationNode);
+        }
     }
-    // Si el token actual no es un inicio válido de Declaración, se permite epsilon ('') vacío
+
+    // Si no hay declaraciones, devolvemos nullptr (epsilon)
+    return (programPrimeNode->getChildsCount()==0) ? nullptr : programPrimeNode;
 }
 
 
-void Declaration() {
+std::shared_ptr<ASTNode> Declaration() {
     if (match(TOKEN_VAR)) {
-        VarDecl();
+        return VarDecl();
     } else if (match(TOKEN_FUNCTION)) {
-        Function();
+        return Function();
     } else {
-        Expression();
+        auto exprNode = Expression();
         if (!match(TOKEN_DELIM_SC)) { // Esperamos un ';'
             error("Se esperaba ';' después de la expresión.");
             sync();
         }
+
+        return exprNode;
     }
 }
 
-void VarDecl() {
-    Type();  // Procesamos el tipo de la variable
-    if (!match(TOKEN_ID)) {  // Verificamos si hay un identificador después del tipo
+std::shared_ptr<ASTNode> VarDecl() {
+    auto varDeclNode = ASTNode::GetNewInstance(TokenType::Default, "VAR_DECL");
+
+    // Procesamos el tipo de la variable y lo añadimos como hijo
+    auto typeNode = Type();
+    if (typeNode != nullptr) {
+        varDeclNode->addChild(typeNode);
+    }
+
+    // Verificamos que haya un identificador
+    if (!match(TOKEN_ID)) {
         error("Se esperaba un identificador después del tipo.");
         sync();
+        return nullptr;
     }
-    VarDeclTail();  // Procesamos el tail de VarDecl
+
+    // Creamos un nodo para el identificador y lo añadimos
+    auto idNode = ASTNode::GetNewInstance(TokenType::Default, auxiliar.value);
+    varDeclNode->addChild(idNode);
+    //nextToken();  // Avanzamos al siguiente token
+
+    // Procesamos el tail de la declaración y obtenemos el nodo correspondiente
+    auto varDeclTailNode = VarDeclTail(idNode);
+    if (varDeclTailNode != nullptr) {
+        varDeclNode->addChild(varDeclTailNode);
+    }
+
+    return varDeclNode;
 }
 
-void VarDeclTail() {
-    if (match(TOKEN_DELIM_SC)) {  // Verificamos si tenemos ';'
-        // Declaración completa sin inicialización
-        return;
-    } else if (match(TOKEN_ASIG)) {  // Verificamos si hay '=' para inicialización
-        Expression();  // Procesamos la expresión de inicialización
-        if (!match(TOKEN_DELIM_SC)) {  // Verificamos si hay ';' al final
+
+std::shared_ptr<ASTNode> VarDeclTail(std::shared_ptr<ASTNode> idNode) {
+    // Si hay un ';', la declaración es completa sin inicialización
+    if (match(TOKEN_DELIM_SC)) {
+        return nullptr;
+    } 
+    // Si hay una asignación '='
+    else if (match(TOKEN_ASIG)) {
+        // Creamos un nodo de asignación
+        auto assignNode = ASTNode::GetNewInstance(TokenType::Default, "ASSIGN");
+
+        // Añadimos el identificador como hijo izquierdo
+        assignNode->addChild(idNode);
+
+        // Procesamos la expresión de inicialización
+        auto exprNode = Expression();
+        if (exprNode != nullptr) {
+            assignNode->addChild(exprNode);
+        }
+
+        // Verificamos que haya un ';' al final
+        if (!match(TOKEN_DELIM_SC)) {
             error("Se esperaba ';' después de la inicialización.");
             sync();
         }
-    } else {
+
+        return assignNode;
+    } 
+    // Error si no se encuentra ni ';' ni '='
+    else {
         error("Se esperaba ';' o '=' en la declaración de la variable.");
         sync();
+        return nullptr;
     }
 }
 
-void Function() {
-    /*if (!match(TOKEN_FUNCTION)) {  // Verificamos si empieza con la palabra clave 'function'
-        error("Se esperaba 'function'.");
-    }*/
 
-    Type();  // Procesamos el tipo de retorno de la función
+std::shared_ptr<ASTNode> Function() {
+    // Nodo principal para la función
+    auto functionNode = ASTNode::GetNewInstance(TokenType::Default, "FUNCTION");
 
-    if (!match(TOKEN_ID)) {  // Verificamos si hay un identificador (nombre de la función)
+    // Procesamos el tipo de retorno y creamos un nodo para él
+    auto returnTypeNode = Type();
+    if (returnTypeNode != nullptr) {
+        functionNode->addChild(returnTypeNode);
+    }
+
+    // Verificamos el identificador de la función
+    if (!match(TOKEN_ID)) {
         error("Se esperaba un identificador para la función.");
         sync();
+        return nullptr;
     }
 
-    if (!match(TOKEN_DELIM_P_O)) {  // Verificamos si hay un paréntesis de apertura '('
+    // Creamos un nodo para el identificador (nombre de la función)
+    auto idNode = ASTNode::GetNewInstance(TokenType::Default, auxiliar.value);
+    functionNode->addChild(idNode);
+
+    // Verificamos el paréntesis de apertura '('
+    if (!match(TOKEN_DELIM_P_O)) {
         error("Se esperaba '(' después del identificador de la función.");
         sync();
+        return nullptr;
     }
 
-    Params();  // Procesamos la lista de parámetros
+    // Nodo para los parámetros
+    auto paramsNode = Params();
+    if (paramsNode != nullptr) {
+        functionNode->addChild(paramsNode);
+    }
 
-    if (!match(TOKEN_DELIM_P_C)) {  // Verificamos si hay un paréntesis de cierre ')'
+    // Verificamos el paréntesis de cierre ')'
+    if (!match(TOKEN_DELIM_P_C)) {
         error("Se esperaba ')' después de los parámetros de la función.");
         sync();
+        return nullptr;
     }
 
-    if (!match(TOKEN_LL_O)) {  // Verificamos si hay una llave de apertura '{'
+    // Verificamos la llave de apertura '{'
+    if (!match(TOKEN_LL_O)) {
         error("Se esperaba '{' al inicio del cuerpo de la función.");
         sync();
+        return nullptr;
     }
 
-    StmtList();  // Procesamos la lista de sentencias (cuerpo de la función)
+    // Nodo para la lista de sentencias (cuerpo de la función)
+    auto stmtListNode = StmtList();
+    if (stmtListNode != nullptr) {
+        functionNode->addChild(stmtListNode);
+    }
 
-    if (!match(TOKEN_LL_C)) {  // Verificamos si hay una llave de cierre '}'
+    // Verificamos la llave de cierre '}'
+    if (!match(TOKEN_LL_C)) {
         error("Se esperaba '}' al final del cuerpo de la función.");
         sync();
+        return nullptr;
     }
+
+    // Retornamos el nodo de la función para añadirlo al árbol sintáctico principal
+    return functionNode;
 }
 
 
 
-void Type() {
+
+std::shared_ptr<ASTNode> Type() {
+    std::shared_ptr<ASTNode> typeNode = nullptr;
+
     if (match(TOKEN_INTEGER)) {
-        TypePrime();  // Procesamos la posible secuencia de corchetes
+        typeNode = ASTNode::GetNewInstance(TokenType::Default, "integer");
+        auto arrayNode = TypePrime(typeNode);
+        if (arrayNode != nullptr) {
+            return arrayNode;
+        }
+        return typeNode;
     } else if (match(TOKEN_BOOLEAN)) {
-        TypePrime();
+        typeNode = ASTNode::GetNewInstance(TokenType::Default, "boolean");
+        auto arrayNode = TypePrime(typeNode);
+        if (arrayNode != nullptr) {
+            return arrayNode;
+        }
+        return typeNode;
     } else if (match(TOKEN_CHAR)) {
-        TypePrime();
+        typeNode = ASTNode::GetNewInstance(TokenType::Default, "char");
+        auto arrayNode = TypePrime(typeNode);
+        if (arrayNode != nullptr) {
+            return arrayNode;
+        }
+        return typeNode;
     } else if (match(TOKEN_STRING)) {
-        TypePrime();
+        typeNode = ASTNode::GetNewInstance(TokenType::Default, "string");
+        auto arrayNode = TypePrime(typeNode);
+        if (arrayNode != nullptr) {
+            return arrayNode;
+        }
+        return typeNode;
     } else if (match(TOKEN_VOID)) {
-        // VOID no tiene arreglo, no necesitamos llamar a TypePrime()
+        return ASTNode::GetNewInstance(TokenType::Default, "void");
     } else {
         error("Se esperaba un tipo válido (integer, boolean, character, string, void).");
         sync();
+        return nullptr;
     }
 }
 
-void TypePrime() {
-    if (match(TOKEN_DELIM_B_O)) {  // Verificamos si hay un corchete de apertura '['
-        if (!match(TOKEN_DELIM_B_C)) {  // Verificamos si hay un corchete de cierre ']'
+std::shared_ptr<ASTNode> TypePrime(std::shared_ptr<ASTNode> baseTypeNode) {
+    // Verificamos si hay un corchete de apertura '['
+    if (match(TOKEN_DELIM_B_O)) {
+        // Creamos un nodo para el arreglo
+        auto arrayNode = ASTNode::GetNewInstance(TokenType::Default, "array");
+
+        // Añadimos el nodo base (tipo primitivo) como hijo del nodo arreglo
+        arrayNode->addChild(baseTypeNode);
+
+        // Verificamos si hay un corchete de cierre ']'
+        if (!match(TOKEN_DELIM_B_C)) {
             error("Se esperaba ']' después del '['.");
             sync();
+            return nullptr;
         }
-        TypePrime();  // Llamada recursiva para procesar arreglos múltiples (como int[][])
+
+        // Llamada recursiva para procesar arreglos múltiples (como int[][])
+        return TypePrime(arrayNode);
     }
-    // Si no hay corchetes, el tipo es simple (por ejemplo, `int` o `int[]`)
+
+    // Si no hay corchetes, retornamos el nodo base (tipo simple)
+    return baseTypeNode;
 }
 
 
 
-void Params() {
-    Type();  // Procesamos el tipo del primer parámetro
+std::shared_ptr<ASTNode> Params() {
+    // Creamos un nodo para la lista de parámetros
+    auto paramsNode = ASTNode::GetNewInstance(TokenType::Default, "params");
 
-    if (!match(TOKEN_ID)) {  // Verificamos si hay un identificador (nombre del parámetro)
+    // Obtenemos el nodo del tipo
+    auto typeNode = Type();
+    if (typeNode == nullptr) {
+        error("Error al procesar el tipo del parámetro.");
+        return nullptr;
+    }
+
+    // Verificamos si hay un identificador (nombre del parámetro)
+    if (!match(TOKEN_ID)) {
         error("Se esperaba un identificador después del tipo en los parámetros.");
         sync();
+        return nullptr;
     }
 
-    ParamsTail();  // Procesamos la cola de parámetros (si hay más)
+    // Creamos un nodo para el parámetro y lo añadimos como hijo del nodo de parámetros
+    auto paramNode = ASTNode::GetNewInstance(TokenType::Default, "param");
+    paramNode->addChild(typeNode);
+    paramNode->addChild(ASTNode::GetNewInstance(TokenType::Default, auxiliar.value));
+    paramsNode->addChild(paramNode);
+
+    // Procesamos la cola de parámetros (si hay más)
+    ParamsTail(paramsNode);
+
+    return paramsNode;
 }
 
-void ParamsTail() {
-    if (match(TOKEN_COMA)) {  // Si encontramos una coma, esperamos otro parámetro
-        Params();  // Llamada recursiva para manejar el siguiente parámetro
-    };
+void ParamsTail(std::shared_ptr<ASTNode> paramsNode) {
+    if (match(TOKEN_COMA)) {
+        // Obtenemos el siguiente parámetro y lo añadimos al nodo de parámetros
+        auto nextParam = Params();
+        if (nextParam != nullptr) {
+
+            paramsNode->addChild(nextParam);
+        }
+    }
     // Si no hay coma, terminamos la lista de parámetros
 }
 
-void StmtList() {
-    Statement();  // Procesamos una sentencia
-    StmtListPrime();  // Procesamos la lista de sentencias restantes
+
+std::shared_ptr<ASTNode> StmtList() {
+    // Creamos un nodo para la lista de sentencias
+    auto stmtListNode = ASTNode::GetNewInstance(TokenType::Default, "StmtList");
+
+    // Añadimos la primera sentencia
+    auto stmtNode = Statement();
+    if (stmtNode != nullptr) {
+        stmtListNode->addChild(stmtNode);
+    }
+
+    // Procesamos las sentencias restantes
+    StmtListPrime(stmtListNode);
+
+    return stmtListNode;
 }
 
-void StmtListPrime() {
-    if (nextTokenIsStatement()) {  // Verificamos si el siguiente token puede ser una sentencia válida
-        Statement();  // Procesamos otra sentencia
-        StmtListPrime();  // Llamada recursiva para continuar procesando más sentencias
+void StmtListPrime(std::shared_ptr<ASTNode> stmtListNode) {
+    if (nextTokenIsStatement()) {
+        // Procesamos otra sentencia
+        auto stmtNode = Statement();
+        if (stmtNode != nullptr) {
+            stmtListNode->addChild(stmtNode);
+        }
+        // Llamada recursiva para continuar procesando más sentencias
+        StmtListPrime(stmtListNode);
     }
-    // Si no hay más sentencias, terminamos la lista de sentencias
 }
 
 bool nextTokenIsStatement() {
@@ -213,101 +418,125 @@ bool nextTokenIsStatement() {
             currentToken.token == TOKEN_FOR || currentToken.token == TOKEN_ASIG);
 }
 
-void Statement() {
+std::shared_ptr<ASTNode> Statement() {
     if (match(TOKEN_VAR)) {  // Si encontramos 'VAR', procesamos una declaración de variable
-        VarDecl();  
+        return VarDecl();  
     } 
     else if (match(TOKEN_IF)) {  // Si encontramos 'IF', procesamos una sentencia condicional
-        IfStmt();
+        return IfStmt();
     } 
     else if (match(TOKEN_FOR)) {  // Si encontramos 'FOR', procesamos una sentencia de bucle for
-        ForStmt();
+        return ForStmt();
     } 
     else if (match(TOKEN_RETURN)) {  // Si encontramos 'RETURN', procesamos una sentencia de retorno
-        ReturnStmt();
+        return ReturnStmt();
     } 
     else if (match(TOKEN_PRINT)) {  // Si encontramos 'PRINT', procesamos una sentencia de impresión
-        PrintStmt();
+        return PrintStmt();
     } 
     else if (match(TOKEN_LL_O)) {  // Si encontramos '{', procesamos un bloque de código (lista de sentencias)
-        StmtList();
+        auto stmtListNode = StmtList();
         if (!match(TOKEN_LL_C)) {
             error("Se esperaba '}' después de la lista de sentencias.");
             sync();
         }
+        return stmtListNode;
     } 
     else {  // De lo contrario, consideramos que es una expresión
-        ExprStmt();
+        return ExprStmt();
     }
 }
 
 
+std::shared_ptr<ASTNode> IfStmt() {
+    // Creamos un nodo para la sentencia 'if'
+    auto ifNode = ASTNode::GetNewInstance(TokenType::Default, "IfStmt");
 
-void IfStmt(){
+    // Verificamos que el siguiente token sea '('
     if (!match(TOKEN_DELIM_P_O)) {
-        error("Se esperaba '(' después de 'for'.");
+        error("Se esperaba '(' después de 'if'.");
         sync();
-    };  
+        return nullptr;
+    }
 
-    Expression();
+    // Procesamos la expresión condicional y la añadimos como hijo del nodo 'if'
+    auto conditionNode = Expression();
+    ifNode->addChild(conditionNode);
 
+    // Verificamos que el siguiente token sea ')'
     if (!match(TOKEN_DELIM_P_C)) {
-        error("Se esperaba ')' después de 'for'.");
+        error("Se esperaba ')' después de la expresión condicional.");
         sync();
-    };  
-
-    if (!match(TOKEN_LL_O)){
-        Statement();
-        if (!match(TOKEN_LL_C)) {
-            error("Se esperaba '}' después de la lista de sentencias.");
-            sync();
-        }
-
-        ElseIfList();
+        return nullptr;
     }
-    
+
+    // Procesamos el cuerpo de la sentencia 'if'
+    auto ifBodyNode = Statement();
+    ifNode->addChild(ifBodyNode);
+
+    // Procesamos 'else if' o 'else'
+    auto elseIfNode = ElseIfList();
+    if (elseIfNode) {
+        ifNode->addChild(elseIfNode);
+    }
+
+    return ifNode;
 }
 
 
-void extra(){
+
+std::shared_ptr<ASTNode> extra() {
     if (match(TOKEN_IF)) {  // Si encontramos 'IF', procesamos una sentencia condicional
-        IfStmt();
+        return IfStmt();  // Devolvemos el nodo del AST para la sentencia 'if'
     } else if (match(TOKEN_LL_O)) {  // Si encontramos '{', procesamos un bloque de código (lista de sentencias)
-        StmtList();
-        if (!match(TOKEN_LL_C)) {
+        auto stmtListNode = StmtList();  // Procesamos la lista de sentencias
+        if (!match(TOKEN_LL_C)) {  // Verificamos que haya una llave de cierre
             error("Se esperaba '}' después de la lista de sentencias.");
             sync();
         }
+        return stmtListNode;  // Devolvemos el nodo de la lista de sentencias
     }
+    return nullptr;  // Si no es 'if' ni un bloque, devolvemos nullptr
+}
+
+std::shared_ptr<ASTNode> ElseIfList() {
+    if (match(TOKEN_ELSE)) {
+        return extra();  // Llamamos a 'extra()' para procesar un posible 'if' o bloque
+    }
+    return nullptr;  // Si no encontramos un 'else', devolvemos nullptr
 }
 
 
-void ElseIfList(){
-    if(match(TOKEN_ELSE)){
-        extra();
-    }
-}
+std::shared_ptr<ASTNode> ForStmt() {
+    // Crear el nodo principal del AST para la sentencia 'for'
+    auto forNode = ASTNode::GetNewInstance(TokenType::Default, "ForStmt");
 
-
-void ForStmt() {
     if (!match(TOKEN_DELIM_P_O)) {
         error("Se esperaba '(' después de 'for'.");
         sync();
-    };
+        return nullptr;
+    }
 
-    // Procesamos la inicialización, que es una sentencia de expresión
-    ExprStmt();
+    // Procesamos la inicialización, que es una sentencia de expresión (por ejemplo, 'i = 0')
+    auto initNode = ExprStmt();  
+    if (initNode) {
+        forNode->addChild(initNode);  // Añadir el nodo de inicialización al nodo del 'for'
+    }
 
-    // Procesamos la condición de continuación del bucle
-    Expression();
+    // Procesamos la condición de continuación del bucle (por ejemplo, 'i < 10')
+    auto conditionNode = Expression();
+    forNode->addChild(conditionNode);  // Añadir el nodo de condición al nodo del 'for'
 
     if (!match(TOKEN_DELIM_SC)) {
         error("Se esperaba ';' después de la condición.");
         sync();
     }
 
-    // Procesamos la actualización
-    ExprStmt();
+    // Procesamos la actualización (por ejemplo, 'i++')
+    auto updateNode = ExprStmt();
+    if (updateNode) {
+        forNode->addChild(updateNode);  // Añadir el nodo de actualización al nodo del 'for'
+    }
 
     if (!match(TOKEN_DELIM_P_C)) {
         error("Se esperaba ')' después de los elementos del for.");
@@ -315,239 +544,493 @@ void ForStmt() {
     }
 
     // Procesamos el cuerpo del bucle
-    Statement();
+    auto bodyNode = Statement();
+    if (bodyNode) {
+        forNode->addChild(bodyNode);  // Añadir el nodo del cuerpo al nodo del 'for'
+    }
+
+    return forNode;  // Devolver el nodo completo de la sentencia 'for'
 }
 
-void ReturnStmt() {
-    Expression();  // Procesamos la expresión de retorno
 
+std::shared_ptr<ASTNode> ReturnStmt() {
+    // Crear el nodo principal para la sentencia de retorno
+    auto returnNode = ASTNode::GetNewInstance(TokenType::Default, "ReturnStmt");
+
+    // Procesamos la expresión de retorno
+    auto returnExpr = Expression();
+    returnNode->addChild(returnExpr);  // Añadir la expresión de retorno como hijo del nodo 'return'
+
+    // Verificamos si hay un punto y coma al final
     if (!match(TOKEN_DELIM_SC)) {
         error("Se esperaba ';' después de la expresión de retorno.");
         sync();
     }
+
+    return returnNode;  // Devolver el nodo completo de la sentencia 'return'
 }
 
-void PrintStmt() {
+
+std::shared_ptr<ASTNode> PrintStmt() {
+    // Crear el nodo principal para la sentencia de impresión
+    auto printNode = ASTNode::GetNewInstance(TokenType::Default, "PrintStmt");
+
+    // Procesamos la lista de expresiones
     if (!match(TOKEN_DELIM_P_O)) {
         error("Se esperaba '(' después de 'print'.");
         sync();
     }
 
-    ExprList();  // Procesamos la lista de expresiones
+    auto exprListNode = ExprList();  // Procesamos las expresiones a imprimir
+    printNode->addChild(exprListNode);
 
     if (!match(TOKEN_DELIM_P_C)) {
         error("Se esperaba ')' después de la lista de expresiones.");
         sync();
     }
 
+    // Verificamos si hay un punto y coma al final
     if (!match(TOKEN_DELIM_SC)) {
         error("Se esperaba ';' después de la lista de expresiones.");
         sync();
     }
-}
 
-void ExprList() {
-    Expression();  // Procesamos la primera expresión
-    while (match(TOKEN_COMA)) {  // Permitimos múltiples expresiones separadas por comas
-        Expression();
-    }
+    return printNode;  // Devolver el nodo completo de la sentencia 'print'
 }
 
 
-void ExprStmt() {
-    if (match(TOKEN_DELIM_SC)) {
-        // Caso de un punto y coma vacío, no hay nada que procesar
-        return;
+std::shared_ptr<ASTNode> ExprList() {
+    auto exprListNode = ASTNode::GetNewInstance(TokenType::Default, "ExprList");
+
+    // Procesamos la primera expresión
+    auto firstExpr = Expression();
+    exprListNode->addChild(firstExpr);  // Añadimos la primera expresión al nodo de la lista
+
+    // Permitimos múltiples expresiones separadas por comas
+    while (match(TOKEN_COMA)) {
+        auto nextExpr = Expression();
+        exprListNode->addChild(nextExpr);  // Añadimos las siguientes expresiones al nodo
     }
 
-    // Si no es un punto y coma vacío, procesamos la expresión
-    Expression();
+    return exprListNode;  // Devolvemos el nodo que contiene todas las expresiones
+}
+
+
+
+std::shared_ptr<ASTNode> ExprStmt() {
+    auto exprStmtNode = ASTNode::GetNewInstance(TokenType::Default, "ExprStmt");
+
+    // Procesamos la expresión
+    auto exprNode = Expression();
+    exprStmtNode->addChild(exprNode);  // Añadimos la expresión como hijo del nodo de la sentencia
 
     // Aseguramos que la expresión termine con un punto y coma
     if (!match(TOKEN_DELIM_SC)) {
         error("Se esperaba ';' después de la expresión.");
         sync();
     }
+
+    return exprStmtNode;  // Devolvemos el nodo de la sentencia
 }
 
 
 
 
+std::shared_ptr<ASTNode> Expression() {
+    std::shared_ptr<ASTNode> exprNode = nullptr;
 
+    if (match(TOKEN_ASIG)) {  // Si encontramos una asignación
+        auto assignNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_COMP_E, "ASSIGN");
 
-
-void Expression() {
-    if (match(TOKEN_ASIG)) { 
-        if (!match(TOKEN_ID)) {
+        if (!match(TOKEN_ID)) {  // Verificamos que haya un identificador después del '='
             error("Se esperaba un identificador después de 'ASSIGN'.");
+            return nullptr;
         }
-        if (!match(TOKEN_ASIG)) {
+        
+        // Creamos el nodo del identificador
+        auto idNode = ASTNode::GetNewInstance(TokenType::Default, auxiliar.value);
+        //idNode->setValue(currentToken.value);  // Establecemos el valor del identificador
+        assignNode->addChild(idNode);
+
+        if (!match(TOKEN_ASIG)) {  // Verificamos que haya un '=' después del identificador
             error("Se esperaba '=' después del identificador.");
+            return nullptr;
         }
-        Expression(); // Recursivamente procesamos la expresión
+
+        // Procesamos la expresión en el lado derecho de la asignación
+        auto rightExprNode = Expression();
+        assignNode->addChild(rightExprNode);  // Añadimos la expresión al nodo de asignación
+        
+        return assignNode;  // Devolvemos el nodo de asignación
+
     } else {
-        OrExpr(); // Comenzamos con la expresión lógica
+        // Si no es una asignación, procesamos una expresión lógica
+        exprNode = OrExpr();  // Procesamos la expresión lógica
+        return exprNode;  // Devolvemos el nodo de la expresión lógica
     }
 }
 
-void OrExpr() {
-    AndExpr();   // Procesamos el lado izquierdo (AndExpr)
-    OrExprPrime(); // Continuamos con la parte recursiva
+std::shared_ptr<ASTNode> OrExpr() {
+    // Procesamos el lado izquierdo de la expresión OR
+    auto leftNode = AndExpr();
+
+    // Continuamos con la parte recursiva de la expresión OR
+    auto orNode = OrExprPrime(leftNode);
+
+    return orNode;
 }
 
-void OrExprPrime() {
-    if (match(TOKEN_OPER_OR)) {  // Verificamos si tenemos '||'
-        AndExpr();          // Si es así, procesamos otra AndExpr
-        OrExprPrime();      // Continuamos con la recursividad
+std::shared_ptr<ASTNode> OrExprPrime(std::shared_ptr<ASTNode> leftNode) {
+    if (match(TOKEN_OPER_OR)) {  // Si encontramos el operador '||'
+        // Creamos un nodo para la operación OR
+        auto orOpNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_OR, "OR");
+        
+        // Añadimos el nodo izquierdo (que ya procesamos en OrExpr)
+        orOpNode->addChild(leftNode);
+
+        // Procesamos el lado derecho (AndExpr)
+        auto rightNode = AndExpr();
+
+        // Añadimos el nodo derecho
+        orOpNode->addChild(rightNode);
+
+        // Llamada recursiva para procesar más expresiones OR
+        auto furtherOrNode = OrExprPrime(orOpNode);
+        
+        return furtherOrNode;  // Devolvemos el nodo completo
     }
-    // Caso epsilon: no hacer nada si no hay '||'
+
+    // Caso epsilon: si no hay más operadores '||', simplemente devolvemos el nodo actual
+    return leftNode;
 }
 
 
-void AndExpr() {
-    EqExpr();     // Procesamos el lado izquierdo (EqExpr)
-    AndExprPrime(); // Continuamos con la parte recursiva
+std::shared_ptr<ASTNode> AndExpr() {
+    // Procesamos el lado izquierdo de la expresión AND
+    auto leftNode = EqExpr();
+
+    // Continuamos con la parte recursiva de la expresión AND
+    auto andNode = AndExprPrime(leftNode);
+
+    return andNode;
 }
 
-void AndExprPrime() {
-    if (match(TOKEN_OPER_AND)) {   // Verificamos si tenemos '&&'
-        EqExpr();             // Si es así, procesamos otra EqExpr
-        AndExprPrime();       // Continuamos con la recursividad
+std::shared_ptr<ASTNode> AndExprPrime(std::shared_ptr<ASTNode> leftNode) {
+    if (match(TOKEN_OPER_AND)) {  // Si encontramos el operador '&&'
+        // Creamos un nodo para la operación AND
+        auto andOpNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_AND, "AND");
+
+        // Añadimos el nodo izquierdo (que ya procesamos en AndExpr)
+        andOpNode->addChild(leftNode);
+
+        // Procesamos el lado derecho (EqExpr)
+        auto rightNode = EqExpr();
+
+        // Añadimos el nodo derecho
+        andOpNode->addChild(rightNode);
+
+        // Llamada recursiva para procesar más expresiones AND
+        auto furtherAndNode = AndExprPrime(andOpNode);
+
+        return furtherAndNode;  // Devolvemos el nodo completo
     }
-    // Caso epsilon: no hacer nada si no hay '&&'
+
+    // Caso epsilon: si no hay más operadores '&&', simplemente devolvemos el nodo actual
+    return leftNode;
+}
+
+std::shared_ptr<ASTNode> EqExpr() {
+    // Procesamos el lado izquierdo de la expresión de igualdad
+    auto leftNode = RelExpr();
+
+    // Continuamos con la parte recursiva de la expresión de igualdad
+    auto eqNode = EqExprPrime(leftNode);
+
+    return eqNode;
 }
 
 
-void EqExpr() {
-    RelExpr();    // Procesamos el lado izquierdo (RelExpr)
-    EqExprPrime(); // Continuamos con la parte recursiva
-}
+std::shared_ptr<ASTNode> EqExprPrime(std::shared_ptr<ASTNode> leftNode) {
+    if (match(TOKEN_OPER_COMP_E)) {     // Si encontramos '=='
+        // Creamos un nodo para la operación de comparación de igualdad
+        auto eqOpNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_COMP_E, "==");
 
-void EqExprPrime() {
-    if (match(TOKEN_OPER_COMP_E)) {     // Verificamos si tenemos '=='
-        RelExpr();             // Procesamos la RelExpr
-        EqExprPrime();         // Continuamos recursivamente
-    } else if (match(TOKEN_OPER_COMP_D)) { // Verificamos si tenemos '!='
-        RelExpr();             // Procesamos la RelExpr
-        EqExprPrime();         // Continuamos recursivamente
+        // Añadimos el nodo izquierdo (que ya procesamos en EqExpr)
+        eqOpNode->addChild(leftNode);
+
+        // Procesamos la siguiente expresión (RelExpr)
+        auto rightNode = RelExpr();
+
+        // Añadimos el nodo derecho
+        eqOpNode->addChild(rightNode);
+
+        // Continuamos recursivamente si hay más operadores de comparación
+        auto furtherEqNode = EqExprPrime(eqOpNode);
+
+        return furtherEqNode;
+    } 
+    else if (match(TOKEN_OPER_COMP_D)) { // Si encontramos '!='
+        // Creamos un nodo para la operación de comparación de desigualdad
+        auto neqOpNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_COMP_E, "!=");
+
+        // Añadimos el nodo izquierdo
+        neqOpNode->addChild(leftNode);
+
+        // Procesamos la siguiente expresión (RelExpr)
+        auto rightNode = RelExpr();
+
+        // Añadimos el nodo derecho
+        neqOpNode->addChild(rightNode);
+
+        // Continuamos recursivamente si hay más operadores de comparación
+        auto furtherNeqNode = EqExprPrime(neqOpNode);
+
+        return furtherNeqNode;
     }
-    // Caso epsilon: no hacer nada si no hay '==' o '!='
+
+    // Caso epsilon: si no hay más operadores de comparación, devolvemos el nodo actual
+    return leftNode;
+}
+
+std::shared_ptr<ASTNode> RelExpr() {
+    // Procesamos el lado izquierdo de la expresión relacional
+    auto leftNode = Expr();
+
+    // Continuamos con la parte recursiva de la expresión relacional
+    auto relNode = RelExprPrime(leftNode);
+
+    return relNode;
 }
 
 
-void RelExpr() {
-    Expr();      // Procesamos la primera expresión
-    RelExprPrime(); // Continuamos con la parte recursiva
-}
-
-void RelExprPrime() {
+std::shared_ptr<ASTNode> RelExprPrime(std::shared_ptr<ASTNode> leftNode) {
     if (match(TOKEN_OPER_MENOR)) {   // Menor que '<'
-        Expr();              // Procesamos otra Expr
-        RelExprPrime();      // Continuamos recursivamente
-    } else if (match(TOKEN_OPER_MAYOR)) {  // Mayor que '>'
-        Expr(); 
-        RelExprPrime();
-    } else if (match(TOKEN_OPER_MEN_E)) {  // Menor o igual '<='
-        Expr();
-        RelExprPrime();
-    } else if (match(TOKEN_OPER_MAY_E)) {  // Mayor o igual '>='
-        Expr();
-        RelExprPrime();
+        auto relOpNode = ASTNode::GetNewInstance(TokenType::Default, "<");
+
+        // Añadimos el nodo izquierdo
+        relOpNode->addChild(leftNode);
+
+        // Procesamos la siguiente expresión (Expr)
+        auto rightNode = Expr();
+
+        // Añadimos el nodo derecho
+        relOpNode->addChild(rightNode);
+
+        // Continuamos recursivamente si hay más operadores relacionales
+        auto furtherRelNode = RelExprPrime(relOpNode);
+
+        return furtherRelNode;
+    } 
+    else if (match(TOKEN_OPER_MAYOR)) {  // Mayor que '>'
+        auto relOpNode = ASTNode::GetNewInstance(TokenType::Default, ">");
+
+        relOpNode->addChild(leftNode);
+
+        auto rightNode = Expr();
+        relOpNode->addChild(rightNode);
+
+        auto furtherRelNode = RelExprPrime(relOpNode);
+
+        return furtherRelNode;
+    } 
+    else if (match(TOKEN_OPER_MEN_E)) {  // Menor o igual '<='
+        auto relOpNode = ASTNode::GetNewInstance(TokenType::Default, "<=");
+
+        relOpNode->addChild(leftNode);
+
+        auto rightNode = Expr();
+        relOpNode->addChild(rightNode);
+
+        auto furtherRelNode = RelExprPrime(relOpNode);
+
+        return furtherRelNode;
+    } 
+    else if (match(TOKEN_OPER_MAY_E)) {  // Mayor o igual '>='
+        auto relOpNode = ASTNode::GetNewInstance(TokenType::Default, ">=");
+
+        relOpNode->addChild(leftNode);
+
+        auto rightNode = Expr();
+        relOpNode->addChild(rightNode);
+
+        auto furtherRelNode = RelExprPrime(relOpNode);
+
+        return furtherRelNode;
     }
-    // Caso epsilon: no hacer nada si no hay '<', '
+
+    // Caso epsilon: no hacer nada si no hay operadores relacionales
+    return leftNode;
 }
 
-void Expr() {
-    Term();        // Procesamos el primer término
-    ExprPrime();   // Continuamos con la parte recursiva
+std::shared_ptr<ASTNode> Expr() {
+    auto leftNode = Term();  // Procesamos el primer término
+    return ExprPrime(leftNode);  // Continuamos con la parte recursiva
 }
 
-void ExprPrime() {
-    if (match(TOKEN_OPER_SUM)) {  // Verificamos si tenemos '+'
-        Term();               // Procesamos otro término
-        ExprPrime();          // Continuamos recursivamente
-    } else if (match(TOKEN_OPER_REST)) {  // Verificamos si tenemos '-'
-        Term();               
-        ExprPrime();          
+std::shared_ptr<ASTNode> ExprPrime(std::shared_ptr<ASTNode> leftNode) {
+    if (match(TOKEN_OPER_SUM)) {  // Verificamos si hay un operador '+'
+        auto addOpNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_SUM, "+");
+
+        addOpNode->addChild(leftNode);  // Añadimos el nodo izquierdo
+
+        auto rightNode = Term();  // Procesamos el siguiente término
+        addOpNode->addChild(rightNode);  // Añadimos el nodo derecho
+
+        return ExprPrime(addOpNode);  // Continuamos recursivamente
+    } 
+    else if (match(TOKEN_OPER_REST)) {  // Verificamos si hay un operador '-'
+        auto subOpNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_REST, "-");
+
+        subOpNode->addChild(leftNode);  // Añadimos el nodo izquierdo
+
+        auto rightNode = Term();  // Procesamos el siguiente término
+        subOpNode->addChild(rightNode);  // Añadimos el nodo derecho
+
+        return ExprPrime(subOpNode);  // Continuamos recursivamente
     }
-    // Caso epsilon: no hacer nada si no hay '+' o '-'
+
+    // Caso epsilon: no hay más operadores, devolvemos el nodo actual
+    return leftNode;
 }
 
 
-void Term() {
-    Unary();         // Procesamos la operación unaria
-    TermPrime();     // Continuamos con la parte recursiva
+
+std::shared_ptr<ASTNode> Term() {
+    auto leftNode = Unary();  // Procesamos la operación unaria
+    return TermPrime(leftNode);  // Continuamos con la parte recursiva
 }
 
-void TermPrime() {
+std::shared_ptr<ASTNode> TermPrime(std::shared_ptr<ASTNode> leftNode) {
     if (match(TOKEN_OPER_MUL)) {  // Verificamos si tenemos '*'
-        Unary();                  // Procesamos la operación unaria
-        TermPrime();              // Continuamos recursivamente
-    } else if (match(TOKEN_OPER_DIV)) {  // Verificamos si tenemos '/'
-        Unary();
-        TermPrime();
-    } else if (match(TOKEN_OPER_MOD)) {     // Verificamos si tenemos '%'
-        Unary();
-        TermPrime();
+        auto mulOpNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_MUL, "*");
+
+        // Añadimos el nodo izquierdo
+        mulOpNode->addChild(leftNode);
+
+        // Procesamos la operación unaria y añadimos el nodo derecho
+        auto rightNode = Unary();
+        mulOpNode->addChild(rightNode);
+
+        // Continuamos recursivamente para procesar más multiplicaciones
+        return TermPrime(mulOpNode);
+    } 
+    else if (match(TOKEN_OPER_DIV)) {  // Verificamos si tenemos '/'
+        auto divOpNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_DIV, "/");
+
+        divOpNode->addChild(leftNode);
+
+        auto rightNode = Unary();
+        divOpNode->addChild(rightNode);
+
+        return TermPrime(divOpNode);
+    } 
+    else if (match(TOKEN_OPER_MOD)) {  // Verificamos si tenemos '%'
+        auto modOpNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_MOD, "%");
+
+        modOpNode->addChild(leftNode);
+
+        auto rightNode = Unary();
+        modOpNode->addChild(rightNode);
+
+        return TermPrime(modOpNode);
     }
-    // Caso epsilon: no hacer nada si no hay '*', '/', '%'
+
+    // Caso epsilon: no hay más operadores de multiplicación/división/módulo
+    return leftNode;
 }
 
 
-void Unary() {
+std::shared_ptr<ASTNode> Unary() {
     if (match(TOKEN_OPER_EX)) {  // Verificamos si tenemos '!'
-        Unary();             // Procesamos otra operación unaria recursivamente
+        auto notNode = ASTNode::GetNewInstance(TokenType::Default, "!");
+        auto operandNode = Unary();  // Procesamos el siguiente operando unario recursivamente
+        notNode->addChild(operandNode);
+        return notNode;
     } else {
-        Factor();            // Si no, procesamos un factor
+        return Factor();  // Si no es un operador unario, procesamos un factor
     }
 }
 
 
-void Factor() {
-    Primary();        // Procesamos el elemento primario
-    FactorPrime();    // Continuamos con la parte recursiva
+
+std::shared_ptr<ASTNode> Factor() {
+    auto primaryNode = Primary();  // Procesamos el elemento primario
+    return FactorPrime(primaryNode);  // Continuamos con la parte recursiva
 }
 
-void FactorPrime() {
-    if (match(TOKEN_DELIM_B_O)) {  // Verificamos si tenemos '['
-        Expression();             // Procesamos la expresión dentro de los corchetes
-        if (!match(TOKEN_DELIM_B_C)) { // Verificamos si hay un ']'
-            error("Se esperaba ']' después de la expresión.");
-        }
-        FactorPrime();            // Continuamos recursivamente
+std::shared_ptr<ASTNode> FactorPrime(std::shared_ptr<ASTNode> leftNode) {
+    if (match(TOKEN_OPER_EXP)) {  // Verificamos si tenemos el operador de potencia '^'
+        auto powerNode = ASTNode::GetNewInstance(TokenType::TOKEN_OPER_EXP, "^");
+
+        // Añadimos el nodo izquierdo (base de la potencia)
+        powerNode->addChild(leftNode);
+
+        // Procesamos el operando derecho (exponente)
+        auto rightNode = Primary();
+        powerNode->addChild(rightNode);
+
+        // Continuamos recursivamente para manejar potencias encadenadas
+        return FactorPrime(powerNode);
     }
-    // Caso epsilon: no hacer nada si no hay '['
+
+    // Caso epsilon: no hay más operadores de potencia
+    return leftNode;
 }
 
 
-void Primary() {
+std::shared_ptr<ASTNode> Primary() {
     if (match(TOKEN_INTEGER)) {  // Verificamos si es un número entero
-        // Procesamos entero
-    } else if (match(TOKEN_CHAR)) {  // Caracter
-        // Procesamos caracter
-    } else if (match(TOKEN_STRING)) {  // Cadena de texto
-        // Procesamos cadena
-    } else if (match(TOKEN_BOOLEAN)) {  // Booleano
-        // Procesamos booleano
-    } else if (match(TOKEN_DELIM_P_O)) {  // '('
-        Expression();  // Procesamos la expresión dentro de los paréntesis
+        // Creamos un nodo para el número entero
+        //cout<<currentToken.value<<endl;
+        return ASTNode::GetNewInstance(TokenType::TOKEN_INTEGER, auxiliar.value);
+    } 
+    else if (match(TOKEN_CHAR)) {  // Caracter
+        return ASTNode::GetNewInstance(TokenType::TOKEN_CHAR, auxiliar.value);
+    } 
+    else if (match(TOKEN_STRING)) {  // Cadena de texto
+        return ASTNode::GetNewInstance(TokenType::TOKEN_STRING, auxiliar.value);
+    } 
+    else if (match(TOKEN_BOOLEAN)) {  // Booleano
+        return ASTNode::GetNewInstance(TokenType::TOKEN_BOOLEAN, auxiliar.value);
+    } 
+    else if (match(TOKEN_DELIM_P_O)) {  // '('
+        auto exprNode = Expression();  // Procesamos la expresión dentro de los paréntesis
         if (!match(TOKEN_DELIM_P_C)) { // Verificamos si hay ')'
             error("Se esperaba ')' después de la expresión.");
         }
-    } else if (match(TOKEN_ID)) {  // Identificador
-        PrimaryTail();  // Procesamos el tail de Primary
-    } else {
+        return exprNode;  // Devolvemos la expresión procesada
+    } 
+    else if (match(TOKEN_ID)) {  // Identificador
+        // Creamos un nodo para el identificador
+        auto idNode = ASTNode::GetNewInstance(TokenType::TOKEN_ID, auxiliar.value);
+        return PrimaryTail(idNode);  // Procesamos el tail del identificador
+    } 
+    else {
         error("Se esperaba un valor primario.");
+        return ASTNode::GetNewInstance(TokenType::Default, "error");
     }
 }
 
-void PrimaryTail() {
-    if (match(TOKEN_DELIM_P_O)) {  // Verificamos si tenemos '('
-        ExprList();  // Procesamos la lista de expresiones
+
+std::shared_ptr<ASTNode> PrimaryTail(std::shared_ptr<ASTNode> idNode) {
+    if (match(TOKEN_DELIM_P_O)) {  // Verificamos si es una llamada a función
+        // Creamos un nodo para la llamada a función
+        auto callNode = ASTNode::GetNewInstance(TokenType::Default, "call");
+        callNode->addChild(idNode);  // Añadimos el identificador como nombre de la función
+
+        // Procesamos la lista de argumentos
+        auto argListNode = ExprList();
+        callNode->addChild(argListNode);
+
         if (!match(TOKEN_DELIM_P_C)) {  // Verificamos si hay ')'
             error("Se esperaba ')' después de la lista de expresiones.");
         }
+
+        // Devolvemos el nodo de llamada a función
+        return callNode;
+    } else {
+        // Si no es una llamada a función, verificamos si es un acceso a arreglo
+        return FactorPrime(idNode);
     }
-    // Caso epsilon: no hacer nada si no hay '('
 }
 
