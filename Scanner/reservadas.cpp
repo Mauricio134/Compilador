@@ -7,7 +7,7 @@
 using namespace std;
 
 int columna = 0;
-int fila = 0;
+int fila = 1;
 string word;
 const char * getcharcurrent = nullptr;
 const char * peekcharcurrent = nullptr;

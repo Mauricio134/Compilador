@@ -1,2 +1,4 @@
-a; //hola
-
+VAR integer x = 10;
+function integer foo(void x){
+   VAR integer y = 20;
+}

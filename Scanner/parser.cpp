@@ -20,6 +20,13 @@ void error(const string &mensaje) {
     error_bool=1;
 }
 
+void sync() {
+    set<TokenType> syncSet = { TOKEN_DELIM_SC };
+    while (syncSet.find(currentToken.token) == syncSet.end() && currentToken.token != TOKEN_EOF) {
+        nextToken();
+    }
+}
+
 
 // Obtener el siguiente token
 void nextToken() {
@@ -69,6 +76,7 @@ void Declaration() {
         Expression();
         if (!match(TOKEN_DELIM_SC)) { // Esperamos un ';'
             error("Se esperaba ';' después de la expresión.");
+            sync();
         }
     }
 }
@@ -77,6 +85,7 @@ void VarDecl() {
     Type();  // Procesamos el tipo de la variable
     if (!match(TOKEN_ID)) {  // Verificamos si hay un identificador después del tipo
         error("Se esperaba un identificador después del tipo.");
+        sync();
     }
     VarDeclTail();  // Procesamos el tail de VarDecl
 }
@@ -89,9 +98,11 @@ void VarDeclTail() {
         Expression();  // Procesamos la expresión de inicialización
         if (!match(TOKEN_DELIM_SC)) {  // Verificamos si hay ';' al final
             error("Se esperaba ';' después de la inicialización.");
+            sync();
         }
     } else {
         error("Se esperaba ';' o '=' en la declaración de la variable.");
+        sync();
     }
 }
 
@@ -104,26 +115,31 @@ void Function() {
 
     if (!match(TOKEN_ID)) {  // Verificamos si hay un identificador (nombre de la función)
         error("Se esperaba un identificador para la función.");
+        sync();
     }
 
     if (!match(TOKEN_DELIM_P_O)) {  // Verificamos si hay un paréntesis de apertura '('
         error("Se esperaba '(' después del identificador de la función.");
+        sync();
     }
 
     Params();  // Procesamos la lista de parámetros
 
     if (!match(TOKEN_DELIM_P_C)) {  // Verificamos si hay un paréntesis de cierre ')'
         error("Se esperaba ')' después de los parámetros de la función.");
+        sync();
     }
 
     if (!match(TOKEN_LL_O)) {  // Verificamos si hay una llave de apertura '{'
         error("Se esperaba '{' al inicio del cuerpo de la función.");
+        sync();
     }
 
     StmtList();  // Procesamos la lista de sentencias (cuerpo de la función)
 
     if (!match(TOKEN_LL_C)) {  // Verificamos si hay una llave de cierre '}'
         error("Se esperaba '}' al final del cuerpo de la función.");
+        sync();
     }
 }
 
@@ -142,6 +158,7 @@ void Type() {
         // VOID no tiene arreglo, no necesitamos llamar a TypePrime()
     } else {
         error("Se esperaba un tipo válido (integer, boolean, character, string, void).");
+        sync();
     }
 }
 
@@ -149,6 +166,7 @@ void TypePrime() {
     if (match(TOKEN_DELIM_B_O)) {  // Verificamos si hay un corchete de apertura '['
         if (!match(TOKEN_DELIM_B_C)) {  // Verificamos si hay un corchete de cierre ']'
             error("Se esperaba ']' después del '['.");
+            sync();
         }
         TypePrime();  // Llamada recursiva para procesar arreglos múltiples (como int[][])
     }
@@ -162,6 +180,7 @@ void Params() {
 
     if (!match(TOKEN_ID)) {  // Verificamos si hay un identificador (nombre del parámetro)
         error("Se esperaba un identificador después del tipo en los parámetros.");
+        sync();
     }
 
     ParamsTail();  // Procesamos la cola de parámetros (si hay más)
@@ -214,6 +233,7 @@ void Statement() {
         StmtList();
         if (!match(TOKEN_LL_C)) {
             error("Se esperaba '}' después de la lista de sentencias.");
+            sync();
         }
     } 
     else {  // De lo contrario, consideramos que es una expresión
@@ -226,18 +246,21 @@ void Statement() {
 void IfStmt(){
     if (!match(TOKEN_DELIM_P_O)) {
         error("Se esperaba '(' después de 'for'.");
+        sync();
     };  
 
     Expression();
 
     if (!match(TOKEN_DELIM_P_C)) {
         error("Se esperaba ')' después de 'for'.");
+        sync();
     };  
 
     if (!match(TOKEN_LL_O)){
         Statement();
         if (!match(TOKEN_LL_C)) {
             error("Se esperaba '}' después de la lista de sentencias.");
+            sync();
         }
 
         ElseIfList();
@@ -253,6 +276,7 @@ void extra(){
         StmtList();
         if (!match(TOKEN_LL_C)) {
             error("Se esperaba '}' después de la lista de sentencias.");
+            sync();
         }
     }
 }
@@ -268,6 +292,7 @@ void ElseIfList(){
 void ForStmt() {
     if (!match(TOKEN_DELIM_P_O)) {
         error("Se esperaba '(' después de 'for'.");
+        sync();
     };
 
     // Procesamos la inicialización, que es una sentencia de expresión
@@ -278,6 +303,7 @@ void ForStmt() {
 
     if (!match(TOKEN_DELIM_SC)) {
         error("Se esperaba ';' después de la condición.");
+        sync();
     }
 
     // Procesamos la actualización
@@ -285,6 +311,7 @@ void ForStmt() {
 
     if (!match(TOKEN_DELIM_P_C)) {
         error("Se esperaba ')' después de los elementos del for.");
+        sync();
     }
 
     // Procesamos el cuerpo del bucle
@@ -296,22 +323,26 @@ void ReturnStmt() {
 
     if (!match(TOKEN_DELIM_SC)) {
         error("Se esperaba ';' después de la expresión de retorno.");
+        sync();
     }
 }
 
 void PrintStmt() {
     if (!match(TOKEN_DELIM_P_O)) {
         error("Se esperaba '(' después de 'print'.");
+        sync();
     }
 
     ExprList();  // Procesamos la lista de expresiones
 
     if (!match(TOKEN_DELIM_P_C)) {
         error("Se esperaba ')' después de la lista de expresiones.");
+        sync();
     }
 
     if (!match(TOKEN_DELIM_SC)) {
         error("Se esperaba ';' después de la lista de expresiones.");
+        sync();
     }
 }
 
@@ -335,6 +366,7 @@ void ExprStmt() {
     // Aseguramos que la expresión termine con un punto y coma
     if (!match(TOKEN_DELIM_SC)) {
         error("Se esperaba ';' después de la expresión.");
+        sync();
     }
 }
 
