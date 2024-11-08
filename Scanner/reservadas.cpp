@@ -35,7 +35,7 @@ public:
 vector<Token> tokens;
 vector<Token> token_errores;
 
-set<string> reservadas = {"array" , "boolean" , "char" , "else" , "false" , "for" , "function" , "if" , "integer" , "print" , "return" , "string" , "true" , "void" , "while", "VAR"};
+set<string> reservadas = {"array" , "boolean" , "char" , "else" , "false" , "for" , "function" , "if" , "integer" , "print" , "return" , "string" , "true" , "void" , "while", "VAR", "ASSIGN"};
 
 map<string, TokenType> Mapa_tokens ={
     {"array", TOKEN_ARRAY},
@@ -53,7 +53,8 @@ map<string, TokenType> Mapa_tokens ={
     {"true", TOKEN_TRUE},
     {"void", TOKEN_VOID},
     {"while", TOKEN_WHILE},
-    {"VAR",TOKEN_VAR}
+    {"VAR",TOKEN_VAR},
+    {"ASSIGN", TOKEN_ASIG}
 };
 
 map<TokenType, string> tokenMap = {

@@ -1,7 +1,14 @@
 VAR integer x = 10;
+ASSIGN x = 10;
 function integer foo(void x){
    VAR integer y = 20;
    if (x>10){
-      print(10)
+      print(10);
    }
+   /*
+   for(ASSIGN i = 0; i <= 10; i ;){
+      return 10;
+   }
+   */
+   foo(10);
 }

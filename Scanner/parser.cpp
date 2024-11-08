@@ -113,7 +113,7 @@ void Program() {
 std::shared_ptr<ASTNode> ProgramPrime() {
     auto programPrimeNode = ASTNode::GetNewInstance(TokenType::Default, "PROGRAM_PRIME");
 
-    while (currentToken.token == TOKEN_VAR || currentToken.token == TOKEN_FUNCTION) {
+    while (currentToken.token == TOKEN_VAR || currentToken.token == TOKEN_FUNCTION || currentToken.token == TOKEN_ASIG) {
         // Analizar una declaración y añadirla como hijo
         auto declarationNode = Declaration();
         if (declarationNode != nullptr) {
