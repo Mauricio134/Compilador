@@ -100,7 +100,10 @@ void Program() {
     if (declarationNode != nullptr) {
         syntaxTree->addChild(declarationNode);
     }
-    ProgramPrime();
+    auto ProgramPrimeNode=ProgramPrime();
+    if (ProgramPrimeNode!=nullptr){
+        syntaxTree->addChild(ProgramPrimeNode);
+    }
     if (!error_bool){
         cout<<"\nPROGRAMA ACEPTADO\n";
     }
