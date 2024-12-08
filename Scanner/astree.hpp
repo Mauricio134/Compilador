@@ -11,18 +11,9 @@
 //#include <iostream>
 //#define DEBUGAST(msg) std::cout <<__LINE__ <<"\t[" <<__func__ <<"]\t" <<msg <<std::endl;
 
+
 namespace ASTree {
 
-/*  AST-дерево представляет собой структурное
-    представление исходной программы, очищенное от элементов конкретного
-    синтаксиса (в рассматриваемом примере в AST-дерево не попал «разделитель»,
-    т.к. он не имеет отношения непосредственно к семантике данного фрагмента
-    программы, а лишь к конкретному синтаксису языка). В качестве узлов в AST-
-    дереве выступают операторы, к которым присоединяются их аргументы,
-    которые в свою очередь также могут быть составными узлами. Часто узлы
-    AST-дерева получаются из лексем, выделенных на этапе лексического анализа,
-    однако могут встречаться и узлы, которым ни одна лексема не соответствует
-*/
 
 static int GlobalIdForASTNode = 0;
 
@@ -46,8 +37,7 @@ private:
         GlobalIdForASTNode++;
     }
 
-    // следующая структура необходима для того, чтобы сработал std::make_shared с приватным
-    // конструктором ASTNode()
+
     template <typename NodeType_>
     struct MakeSharedEnabler: public ASTNode<NodeType_> {
         explicit MakeSharedEnabler(NodeType_ type, std::string text)
@@ -110,47 +100,47 @@ public:
                                     //yet and there isn't any shared_ptr that point to it
         child->setParent(self);
 
-        childs_.remove(child); //если уже есть child в списке, удалить его
+        childs_.remove(child); 
         childs_.emplace_back(std::move(child));
     }
 
-    // Удалить дочерний узел из текущего узла (child - узел, который должен быть удален)
+
     void removeChild(const SharedPtr &child){
         childs_.remove(child);
 
-        // если текущий узел является отцом у дочернего, нужно это убрать, сделав отцом пустой SharedPtr
+        
         if(child->getParent().lock() == this->shared_from_this()){
             child->setParent(SharedPtr());
         }
     }
 
-    // Получить к-во дочерних узлов у текущего узла
+    
     size_t getChildsCount() const { return childs_.size(); }
 
-    // Проверить, установлен ли отцовский узел
+   
     bool isParentValid () const {
         //return (! parent_.owner_before(WeakPtr{})) && (! WeakPtr{}.owner_before(parent_));
         return parent_.lock() != nullptr;
     }
 
-    // Получить WeakPtr на отцовский узел
+    
     WeakPtr getParent() { return parent_; }
 
-    // Сделать отцом текущего узла "parent" узел
+   
     void setParent( const WeakPtr &parent) { parent_ = parent; }
 
-    // Сделаться отцовским узлом у узла val
+    
     void setAsParent(const SharedPtr &val) {
         auto self = this->shared_from_this();
         val->addChild(self);
     }
 
-    // Полусить дочерний узел по его индексу
+    
     SharedPtr getChild(long index) const {
         return *(std::next(childs_.begin(), index));
     }
 
-    // Получить индекс дочернего узла по самому узлу.
+    
     // Возвращается пара, где левое значение -- нашелся ли такой узел среди дочерних, правое -- индекс, если нашелся
     std::pair<bool, long> getChildIndex(const SharedPtr &child) const {
         // Find given element in list
@@ -163,8 +153,7 @@ public:
         return std::make_pair(true, std::distance(childs_.begin(), it));
     }
 
-    // Получить индекс этого узла у его родительского узла, если тот устаовлен.
-    // Возвращается пара, где левое значение -- нашелся ли такой узел среди дочерних у родительского, правое -- индекс, если нашелся
+    
     std::pair<bool, long> getChildIndexInParent() {
         if(! isParentValid()){
             return std::make_pair(false, -1L);
@@ -174,30 +163,30 @@ public:
         return parent_.lock()->getChildIndex(self);
     }
 
-    // Получить все дочернии узлы текущего
+    
     std::list<SharedPtr> getChilds() const { return childs_; }
 
-    // Получить уникальное имя узла
+   
     std::string getUniqueName() const { return uniqName_; }
 
-    // Получить тип узла
+    
     NodeType getType() const { return type_; }
 
-    // Получить присвоеный узлу текст
+    
     std::string getText() const { return text_; }
 
-    // Вывести информацию о текущем узле
+    
     std::string toString() const { return text_ + " (type: " + std::to_string(type_) + ")"; }
 
 private:
 
-    // уникальное имя узла
+    
     std::string uniqName_ = "node_" + std::to_string(GlobalIdForASTNode);
     
-    // тип узла
+    
      NodeType type_;
 
-     // текст, связанный с узлом
+     
      std::string text_;
 
      // родительский узел для данного узла дерева

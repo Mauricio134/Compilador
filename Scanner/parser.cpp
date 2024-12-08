@@ -60,6 +60,7 @@ std::shared_ptr<ASTNode> ElseIfList();
 std::shared_ptr<ASTNode> extra();
 
 Token auxiliar;
+
 void error(const string &mensaje) {
     cout << "Error: " << mensaje << " en la línea " << currentToken.fila << ", columna " << currentToken.columna << ". Token encontrado: " << currentToken.value << endl;
     error_bool=1;

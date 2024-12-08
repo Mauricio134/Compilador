@@ -431,6 +431,20 @@ void getChar(string linea)
 }
 
 
+template <typename NodeType>
+void DepthFirstTraversal(const typename ASTree::ASTNode<NodeType>::SharedPtr &node, int depth = 0) {
+    if (!node) return;
+
+    // Imprimir información del nodo actual
+    std::cout << std::string(depth * 2, ' ') << node->toString() << std::endl;
+
+    // Recorrer los hijos del nodo actual
+    for (const auto &child : node->getChilds()) {
+        DepthFirstTraversal<NodeType>(child, depth + 1);
+    }
+}
+
+
 int main()
 {
     string name = "B-minor.txt";
@@ -481,6 +495,9 @@ int main()
 
         // скормим сгенерированый файл утилите dot, которая сгенерирует png изображение
         system("dot -O -Tpng dot_format.txt");
+
+        std::cout << "\nRecorrido en profundidad (DFS) del árbol sintáctico:\n";
+        DepthFirstTraversal<TokenType>(syntaxTree);
     }
 
 
