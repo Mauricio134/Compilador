@@ -222,19 +222,30 @@ public:
     }
 
 private:
-    static void GetStringSubTree(const std::shared_ptr<ASTNode<NodeType>> &node, std::stringstream &stream){
-
-        if(! node->getParent().lock()){
-            stream << "\t\tn" << node->getUniqueName() << "[label=\"" << node->getText() <<"\"];" << std::endl;
-        }else {
-            stream << "\t\tn" << node->getUniqueName() << "[label=\"" << node->getText() <<"\"];" << std::endl;
-            stream << "\t\tn" <<node->getParent().lock()->getUniqueName() << "--n" <<node->getUniqueName() << ";" << std::endl;
+    static void GetStringSubTree(const std::shared_ptr<ASTNode<NodeType>> &node, std::stringstream &stream) {
+        // Obtener el texto del nodo
+        std::string nodeText = node->getText();
+        
+        // Verificar si el texto tiene comillas dobles al principio y al final
+        if (nodeText.front() == '"' && nodeText.back() == '"') {
+            // Eliminar las comillas dobles
+            nodeText = nodeText.substr(1, nodeText.size() - 2);
         }
 
+        // Imprimir el nodo y su texto (sin comillas, si las tenía)
+        if (!node->getParent().lock()) {
+            stream << "\t\tn" << node->getUniqueName() << "[label=\"" << nodeText << "\"];" << std::endl;
+        } else {
+            stream << "\t\tn" << node->getUniqueName() << "[label=\"" << nodeText << "\"];" << std::endl;
+            stream << "\t\tn" << node->getParent().lock()->getUniqueName() << "--n" << node->getUniqueName() << ";" << std::endl;
+        }
+
+        // Recursivamente llamar a los hijos del nodo
         for (int i = 0; i < node->getChildsCount(); i++) {
             GetStringSubTree(node->getChild(i), stream);
         }
     }
+
 
 private:
     const std::shared_ptr<ASTNode<NodeType>> head_;

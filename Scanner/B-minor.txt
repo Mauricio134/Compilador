@@ -21,5 +21,6 @@ function integer foo(void x){
 
 
 function void main(void aux){
-   ASSIGN x = z;
+   ASSIGN x = "adios";
+   VAR string y = "hola";
 }

@@ -174,7 +174,17 @@ graph {
 		nnode_84--nnode_85;
 		nnode_86[label="x"];
 		nnode_85--nnode_86;
-		nnode_87[label="z"];
+		nnode_87[label="adios"];
 		nnode_85--nnode_87;
+		nnode_88[label="VAR_DECL"];
+		nnode_83--nnode_88;
+		nnode_89[label="string"];
+		nnode_88--nnode_89;
+		nnode_91[label="ASSIGN"];
+		nnode_88--nnode_91;
+		nnode_90[label="y"];
+		nnode_91--nnode_90;
+		nnode_92[label="hola"];
+		nnode_91--nnode_92;
 	}
 }

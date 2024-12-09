@@ -1004,7 +1004,7 @@ std::shared_ptr<ASTNode> Primary() {
     else if (match(TOKEN_STRING)) {  // Cadena de texto
         string sanitizedValue = sanitizeString(auxiliar.value);
         cout << sanitizedValue << endl;
-        return ASTNode::GetNewInstance(TokenType::TOKEN_STRING, sanitizedValue);
+        return ASTNode::GetNewInstance(TokenType::TOKEN_STRING, auxiliar.value);
         
     } 
     else if (match(TOKEN_BOOLEAN)) {  // Booleano
