@@ -3,6 +3,7 @@
 #include <string>
 #include "../Scanner/reservadas.cpp"
 #include "../Scanner/parser.cpp"
+#include "../Scanner/tablas_variables_V2.cpp"
 using namespace std;
 
 
@@ -486,6 +487,7 @@ int main()
     if(!error_bool){
         using ASTNodeWalker = ASTree::ASTNodeWalker<TokenType>;
         ASTNodeWalker walker(syntaxTree);
+        tablas_variables_manager manager;
         walker.buildDotFormat();
 
         std::cout <<walker.getDotFormat() <<std::endl;
@@ -498,6 +500,12 @@ int main()
 
         std::cout << "\nRecorrido en profundidad (DFS) del árbol sintáctico:\n";
         DepthFirstTraversal<TokenType>(syntaxTree);
+
+        Build_Tabla_Variables<TokenType>(syntaxTree,manager);
+        
+        manager.finalizeGlobalTable();
+        manager.printTables();
+
     }
 
 

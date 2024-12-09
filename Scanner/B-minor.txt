@@ -1,14 +1,25 @@
+
 VAR integer x = 10;
-ASSIGN x = 10;
 function integer foo(void x){
    VAR integer y = 20;
    if (x>10){
       print(10);
+      VAR char t = 'a';
    }
-   /*
+   VAR integer i;
+   VAR integer z = 20;
    for(ASSIGN i = 0; i <= 10; i ;){
-      return 10;
+     VAR integer k=9;
+     ASSIGN i = 'b';
+     if(i==1){
+      VAR char t = 'a';
+     }
    }
-   */
+
    foo(10);
+}
+
+
+function void main(void aux){
+   ASSIGN x = z;
 }

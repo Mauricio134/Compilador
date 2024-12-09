@@ -3,6 +3,8 @@
 #include <set>
 #include <map>
 #include <vector>
+#include <algorithm>
+#include <string>
 #include "../Scanner/reservadas.cpp"
 #include "../Scanner/parser.h"
 #include "../Scanner/astree.hpp"
@@ -60,6 +62,14 @@ std::shared_ptr<ASTNode> ElseIfList();
 std::shared_ptr<ASTNode> extra();
 
 Token auxiliar;
+
+
+std::string sanitizeString(const std::string& input) {
+    std::string sanitized = input;
+    sanitized.erase(std::remove(sanitized.begin(), sanitized.end(), '"'), sanitized.end());
+    return sanitized;
+}
+
 
 void error(const string &mensaje) {
     cout << "Error: " << mensaje << " en la línea " << currentToken.fila << ", columna " << currentToken.columna << ". Token encontrado: " << currentToken.value << endl;
@@ -992,7 +1002,10 @@ std::shared_ptr<ASTNode> Primary() {
         return ASTNode::GetNewInstance(TokenType::TOKEN_CHAR, auxiliar.value);
     } 
     else if (match(TOKEN_STRING)) {  // Cadena de texto
-        return ASTNode::GetNewInstance(TokenType::TOKEN_STRING, auxiliar.value);
+        string sanitizedValue = sanitizeString(auxiliar.value);
+        cout << sanitizedValue << endl;
+        return ASTNode::GetNewInstance(TokenType::TOKEN_STRING, sanitizedValue);
+        
     } 
     else if (match(TOKEN_BOOLEAN)) {  // Booleano
         return ASTNode::GetNewInstance(TokenType::TOKEN_BOOLEAN, auxiliar.value);
