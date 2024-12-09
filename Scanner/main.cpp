@@ -6,6 +6,7 @@
 #include "../Scanner/tablas_variables_V2.cpp"
 using namespace std;
 
+bool imprimir_scan=false;
 
 void SkipWhiteSpace()
 {
@@ -465,13 +466,16 @@ int main()
         getChar(linea);
     }
     cout <<"INFO SCAN - Start scanning…"<<endl;
-    for (auto token : tokens)
-    {
-        if (tokenMap[token.token]!="DESCONOCIDO")
+    if(imprimir_scan){
+
+        for (auto token : tokens)
         {
-            cout<<"DEBUG SCAN - "<<tokenMap[token.token]<<" ["<<token.value<<"] found at ("<<token.fila<<":"<<token.columna<<")"<<endl;
-        }else{
-            token_errores.push_back(token);
+            if (tokenMap[token.token]!="DESCONOCIDO")
+            {
+                cout<<"DEBUG SCAN - "<<tokenMap[token.token]<<" ["<<token.value<<"] found at ("<<token.fila<<":"<<token.columna<<")"<<endl;
+            }else{
+                token_errores.push_back(token);
+            }
         }
     }
     cout <<endl<<"INFO SCAN - Completed with "<<token_errores.size()<<" errors"<<endl;
@@ -480,8 +484,8 @@ int main()
     {
         cout<<"DEBUG SCAN ERROR - "<<tokenMap[token.token]<<" ["<<token.value<<"] found at ("<<token.fila<<":"<<token.columna<<")"<<endl;
     }
-    
-    cout <<"INFO SCAN - Start parsing…"<<endl;
+
+    cout <<"INFO Parsing - Start parsing…"<<endl;
     nextToken();
     Program();
     if(!error_bool){
@@ -490,7 +494,7 @@ int main()
         tablas_variables_manager manager;
         walker.buildDotFormat();
 
-        std::cout <<walker.getDotFormat() <<std::endl;
+        //std::cout <<walker.getDotFormat() <<std::endl;
 
         // запишем в файл dot_format.txt дерево в формате dot
         std::ofstream{"dot_format.txt", std::ios::trunc | std::ios::out} << walker.getDotFormat();
@@ -498,9 +502,10 @@ int main()
         // скормим сгенерированый файл утилите dot, которая сгенерирует png изображение
         system("dot -O -Tpng dot_format.txt");
 
-        std::cout << "\nRecorrido en profundidad (DFS) del árbol sintáctico:\n";
-        DepthFirstTraversal<TokenType>(syntaxTree);
+        //std::cout << "\nRecorrido en profundidad (DFS) del árbol sintáctico:\n";
+        //DepthFirstTraversal<TokenType>(syntaxTree);
 
+        std::cout << "\nINFO DFS_technique - Start Semantic analysis\n";
         Build_Tabla_Variables<TokenType>(syntaxTree,manager);
         
         manager.finalizeGlobalTable();

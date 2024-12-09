@@ -12,7 +12,7 @@ function integer foo(void x){
      VAR integer k=9;
      ASSIGN i = 'b';
      if(i==1){
-      VAR char t = 'a';
+      VAR char gat = 'a';
      }
    }
 

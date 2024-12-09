@@ -138,7 +138,7 @@ graph {
 		nnode_66--nnode_67;
 		nnode_69[label="ASSIGN"];
 		nnode_66--nnode_69;
-		nnode_68[label="t"];
+		nnode_68[label="gat"];
 		nnode_69--nnode_68;
 		nnode_70[label="'a'"];
 		nnode_69--nnode_70;

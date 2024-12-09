@@ -64,13 +64,6 @@ std::shared_ptr<ASTNode> extra();
 Token auxiliar;
 
 
-std::string sanitizeString(const std::string& input) {
-    std::string sanitized = input;
-    sanitized.erase(std::remove(sanitized.begin(), sanitized.end(), '"'), sanitized.end());
-    return sanitized;
-}
-
-
 void error(const string &mensaje) {
     cout << "Error: " << mensaje << " en la línea " << currentToken.fila << ", columna " << currentToken.columna << ". Token encontrado: " << currentToken.value << endl;
     error_bool=1;
@@ -116,7 +109,7 @@ void Program() {
         syntaxTree->addChild(ProgramPrimeNode);
     }
     if (!error_bool){
-        cout<<"\nPROGRAMA ACEPTADO\n";
+        cout<<"\nPROGRAMA ACEPTADO SIN ERRORES DE PARSING\n";
     }
     
 }
@@ -1002,8 +995,6 @@ std::shared_ptr<ASTNode> Primary() {
         return ASTNode::GetNewInstance(TokenType::TOKEN_CHAR, auxiliar.value);
     } 
     else if (match(TOKEN_STRING)) {  // Cadena de texto
-        string sanitizedValue = sanitizeString(auxiliar.value);
-        cout << sanitizedValue << endl;
         return ASTNode::GetNewInstance(TokenType::TOKEN_STRING, auxiliar.value);
         
     } 
